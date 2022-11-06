@@ -13,7 +13,7 @@ resource "aws_glue_catalog_table" "user" {
   }
 
   storage_descriptor {
-    location      = "s3://${local.signal_bucket_name}/user"
+    location      = "s3://${local.signal_bucket_name}/repository"
     input_format  = "org.apache.hadoop.mapred.TextInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
 

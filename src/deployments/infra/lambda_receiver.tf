@@ -1,6 +1,6 @@
 data "archive_file" "signal_persistance_lambda_zip" {
   type        = "zip"
-  source_file = "../../cmd/lambda-directoryobjectreceiver/main"
+  source_file = "../../cmd/lambda-engineeringobjectreceiver/main"
   output_path = "main.zip"
 }
 
