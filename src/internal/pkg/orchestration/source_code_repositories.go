@@ -1,13 +1,13 @@
 package orchestration
 
 import (
+	"context"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/clients"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/configuration"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/messaging"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/models"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/repositories"
 	"log"
-	"strings"
 	"sync"
 	"time"
 )
@@ -46,19 +46,6 @@ func ExtractRepositories(host string,
 	return nil
 }
 
-func getHosts(host string, hostType string, hostRepository repositories.HostRepository) ([]*models.Host, error) {
-	if strings.TrimSpace(host) == "" {
-		return hostRepository.GetAll(hostType)
-	}
-
-	hostData, err := hostRepository.Get(host)
-	if err != nil {
-		return make([]*models.Host, 0), err
-	}
-
-	return []*models.Host{hostData}, nil
-}
-
 func processHostRepositories(host *models.Host,
 	since *time.Time,
 	configurationService configuration.ConfigurationService,
@@ -70,6 +57,10 @@ func processHostRepositories(host *models.Host,
 		return err
 	}
 
-	log.Println(client.BaseURL.String())
+	user, response, err := client.Users.Get(context.Background(), "jrolstad")
+	if err != nil {
+		return err
+	}
+	log.Printf("Users:%s|Response Code:%v", user.GetURL(), response.StatusCode)
 	return nil
 }

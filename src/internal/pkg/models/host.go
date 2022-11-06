@@ -1,7 +1,7 @@
 package models
 
 const (
-	HostTypeSourceCodeRepository = "repository"
+	HostTypeSourceCodeRepository = "source code host"
 )
 
 type Host struct {
