@@ -7,3 +7,12 @@ func MapFromJson(toMap string, target interface{}) error {
 
 	return err
 }
+
+func MapToJson(toMap interface{}) string {
+	result, err := json.Marshal(toMap)
+	if err != nil {
+		return "{}"
+	}
+
+	return string(result)
+}
