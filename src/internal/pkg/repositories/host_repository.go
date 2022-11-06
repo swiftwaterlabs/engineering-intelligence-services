@@ -6,7 +6,7 @@ import (
 )
 
 type HostRepository interface {
-	GetAll() ([]*models.Host, error)
+	GetAll(hostType string) ([]*models.Host, error)
 	Get(identifier string) (*models.Host, error)
 }
 

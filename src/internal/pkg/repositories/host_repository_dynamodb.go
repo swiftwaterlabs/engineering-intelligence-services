@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/configuration"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/models"
+	"strings"
 )
 
 func NewDynamoDbHostRepository(appConfig *configuration.AppConfig, config configuration.ConfigurationService) *DynamoDbDirectoryRepository {
@@ -12,7 +13,7 @@ func NewDynamoDbHostRepository(appConfig *configuration.AppConfig, config config
 	client := dynamodb.New(session)
 
 	return &DynamoDbDirectoryRepository{
-		tableName: config.GetValue("identity_intelligence_prd_directories_table"),
+		tableName: config.GetValue("engineering_intelligence_prd_directories_table"),
 		client:    client,
 	}
 }
@@ -22,7 +23,7 @@ type DynamoDbDirectoryRepository struct {
 	client    *dynamodb.DynamoDB
 }
 
-func (r *DynamoDbDirectoryRepository) GetAll() ([]*models.Host, error) {
+func (r *DynamoDbDirectoryRepository) GetAll(hostType string) ([]*models.Host, error) {
 	result := make([]*models.Host, 0)
 	scanInput := &dynamodb.ScanInput{
 		TableName: aws.String(r.tableName),
@@ -33,8 +34,10 @@ func (r *DynamoDbDirectoryRepository) GetAll() ([]*models.Host, error) {
 	}
 
 	for _, item := range queryResult.Items {
-		directory := r.mapItemToDirectory(item)
-		result = append(result, directory)
+		host := r.mapItemToHost(item)
+		if strings.EqualFold(hostType, host.Type) {
+			result = append(result, host)
+		}
 	}
 
 	return result, nil
@@ -54,16 +57,17 @@ func (r *DynamoDbDirectoryRepository) Get(identifier string) (*models.Host, erro
 		return nil, err
 	}
 
-	result := r.mapItemToDirectory(queryResult.Item)
+	result := r.mapItemToHost(queryResult.Item)
 	return result, nil
 }
 
-func (r *DynamoDbDirectoryRepository) mapItemToDirectory(item map[string]*dynamodb.AttributeValue) *models.Host {
+func (r *DynamoDbDirectoryRepository) mapItemToHost(item map[string]*dynamodb.AttributeValue) *models.Host {
 	return &models.Host{
 		Id:                 r.getStringValue(item["Id"]),
 		Name:               r.getStringValue(item["Name"]),
 		BaseUrl:            r.getStringValue(item["BaseUrl"]),
 		Type:               r.getStringValue(item["Type"]),
+		SubType:            r.getStringValue(item["SubType"]),
 		AuthenticationType: r.getStringValue(item["AuthenticationType"]),
 		ClientSecretName:   r.getStringValue(item["ClientSecretName"]),
 	}
