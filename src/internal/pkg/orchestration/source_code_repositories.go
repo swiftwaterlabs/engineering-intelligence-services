@@ -1,7 +1,6 @@
 package orchestration
 
 import (
-	"context"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/clients"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/configuration"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/messaging"
@@ -33,7 +32,7 @@ func ExtractRepositories(host string,
 			defer hostWaitGroup.Done()
 
 			log.Printf("Procesing host:%s", host.Id)
-			err := processHostRepositories(host, since, configurationService, dataHub)
+			err := processHostRepositories(host, configurationService, dataHub)
 			if err != nil {
 				log.Printf("Error when processing host:%s|%s", host.Id, err)
 			}
@@ -47,20 +46,19 @@ func ExtractRepositories(host string,
 }
 
 func processHostRepositories(host *models.Host,
-	since *time.Time,
 	configurationService configuration.ConfigurationService,
 	dataHub messaging.MessageHub) error {
 
-	hostSecret := configurationService.GetSecret(host.ClientSecretName)
-	client, err := clients.GetGitHubClient(host.SubType, host.BaseUrl, host.AuthenticationType, hostSecret)
+	client, err := clients.NewSourceCodeRepositoryClient(host)
 	if err != nil {
 		return err
 	}
 
-	user, response, err := client.Users.Get(context.Background(), "jrolstad")
-	if err != nil {
-		return err
+	processor := func(data []*models.Repository) {
+		log.Println("Processing repos")
 	}
-	log.Printf("Users:%s|Response Code:%v", user.GetURL(), response.StatusCode)
-	return nil
+
+	processingErr := client.ProcessRepositories(configurationService, processor)
+
+	return processingErr
 }
