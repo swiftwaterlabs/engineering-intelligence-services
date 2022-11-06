@@ -30,7 +30,7 @@ jobs:
 
       - name: Build Lambda Receiver
         run: GOOS=linux go build -o main
-        working-directory: ./src/cmd/lambda-directoryobjectreceiver
+        working-directory: ./src/cmd/lambda-engineeringobjectreceiver
 
       - name: Run Unit Tests
         run: go test ./...
