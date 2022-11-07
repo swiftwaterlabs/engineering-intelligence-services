@@ -34,7 +34,7 @@ resource "aws_glue_catalog_table" "user" {
 
     columns {
       name = "organization"
-      type = "struct<id:string, name:string, host:string, url:string, description:string>"
+      type = "struct<id:string,name:string,host:string,hosttype:string,url:string,description:string>"
     }
 
     columns {
