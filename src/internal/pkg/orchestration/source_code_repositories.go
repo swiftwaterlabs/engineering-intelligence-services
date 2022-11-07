@@ -73,3 +73,12 @@ func processHostRepositories(host *models.Host,
 
 	return processingErr
 }
+
+func ExtractRepositoryOwners(host string,
+	since *time.Time,
+	configurationService configuration.ConfigurationService,
+	hostRepository repositories.HostRepository,
+	dataHub messaging.MessageHub) error {
+
+	return nil
+}

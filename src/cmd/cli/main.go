@@ -35,6 +35,12 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+	case "repository-owners":
+		since := core.ParseDate(sinceArgument)
+		err := orchestration.ExtractRepositoryOwners(*hostArgument, since, configurationService, directoryRepository, messageHub)
+		if err != nil {
+			log.Fatal(err)
+		}
 	default:
 		log.Fatalln("Unrecognized object")
 	}

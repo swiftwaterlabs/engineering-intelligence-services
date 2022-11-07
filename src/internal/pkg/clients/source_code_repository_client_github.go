@@ -19,7 +19,7 @@ const (
 )
 
 func (c *GithubSourceCodeRepositoryClient) ProcessRepositories(configurationService configuration.ConfigurationService,
-	processor func(data []*models.Repository)) error {
+	repositoryHandler func(data []*models.Repository)) error {
 
 	hostSecret := configurationService.GetSecret(c.host.ClientSecretName)
 	client, err := getGitHubClient(c.host.SubType, c.host.BaseUrl, c.host.AuthenticationType, hostSecret)
@@ -28,10 +28,10 @@ func (c *GithubSourceCodeRepositoryClient) ProcessRepositories(configurationServ
 	}
 
 	if strings.EqualFold(githubClientTypeEnterpriseServer, c.host.SubType) {
-		return c.processAllOrganizationsOnHost(client, processor)
+		return c.processAllOrganizationsOnHost(client, repositoryHandler)
 	}
 
-	return c.processAllMemberOrganizations(client, processor)
+	return c.processAllMemberOrganizations(client, repositoryHandler)
 }
 
 func getGitHubClient(hostType string, baseUrl, authenticationType string, authenticationSecret string) (*github.Client, error) {
@@ -52,7 +52,7 @@ func getGitHubClient(hostType string, baseUrl, authenticationType string, authen
 }
 
 func (c *GithubSourceCodeRepositoryClient) processAllOrganizationsOnHost(client *github.Client,
-	processor func(data []*models.Repository)) error {
+	repositoryHandler func(data []*models.Repository)) error {
 
 	listOptions := &github.OrganizationsListOptions{
 		ListOptions: github.ListOptions{PerPage: 100},
@@ -66,7 +66,7 @@ func (c *GithubSourceCodeRepositoryClient) processAllOrganizationsOnHost(client 
 		}
 
 		for _, item := range organizations {
-			err := c.processRepositoriesInOrganization(client, item, processor)
+			err := c.processRepositoriesInOrganization(client, item, repositoryHandler)
 			if err != nil {
 				processingErrors = append(processingErrors, err)
 			}
@@ -92,7 +92,7 @@ func getLastOrganization(data []*github.Organization) int64 {
 }
 
 func (c *GithubSourceCodeRepositoryClient) processAllMemberOrganizations(client *github.Client,
-	processor func(data []*models.Repository)) error {
+	repositoryHandler func(data []*models.Repository)) error {
 	listOptions := &github.ListOrgMembershipsOptions{
 		ListOptions: github.ListOptions{PerPage: 100},
 	}
@@ -105,7 +105,7 @@ func (c *GithubSourceCodeRepositoryClient) processAllMemberOrganizations(client 
 		}
 
 		for _, item := range memberOrganizations {
-			err = c.processRepositoriesInOrganization(client, item.GetOrganization(), processor)
+			err = c.processRepositoriesInOrganization(client, item.GetOrganization(), repositoryHandler)
 			if err != nil {
 				processingErrors = append(processingErrors, err)
 			}
@@ -126,7 +126,7 @@ func (c *GithubSourceCodeRepositoryClient) processAllMemberOrganizations(client 
 
 func (c *GithubSourceCodeRepositoryClient) processRepositoriesInOrganization(client *github.Client,
 	organization *github.Organization,
-	processor func(data []*models.Repository)) error {
+	repositoryHandler func(data []*models.Repository)) error {
 	opt := &github.RepositoryListByOrgOptions{
 		Sort:        "full_name",
 		Direction:   "asc",
@@ -144,7 +144,10 @@ func (c *GithubSourceCodeRepositoryClient) processRepositoriesInOrganization(cli
 			mappedItem := mapRepository(c.host, organization, item)
 			mappedData = append(mappedData, mappedItem)
 		}
-		processor(mappedData)
+
+		if repositoryHandler != nil {
+			repositoryHandler(mappedData)
+		}
 
 		if response.NextPage == 0 {
 			break
