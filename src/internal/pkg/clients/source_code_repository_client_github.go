@@ -2,8 +2,6 @@ package clients
 
 import (
 	"context"
-	"crypto/sha256"
-	"fmt"
 	"github.com/google/go-github/v48/github"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/configuration"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/core"
@@ -156,41 +154,4 @@ func (c *GithubSourceCodeRepositoryClient) processRepositoriesInOrganization(cli
 	}
 
 	return nil
-}
-
-func mapRepository(host *models.Host, organization *github.Organization, repository *github.Repository) *models.Repository {
-	return &models.Repository{
-		Id:                  calculateUniqueIdentifier(host.Id, organization.GetLogin(), repository.GetName()),
-		Type:                "repository",
-		Organization:        mapOrganization(host, organization),
-		Name:                repository.GetName(),
-		DefaultBranch:       repository.GetDefaultBranch(),
-		Url:                 repository.GetHTMLURL(),
-		Visibility:          repository.GetVisibility(),
-		CreatedAt:           repository.GetCreatedAt().Time,
-		UpdatedAt:           repository.GetUpdatedAt().Time,
-		ContentsLastUpdated: repository.GetPushedAt().Time,
-		RawData:             repository,
-	}
-}
-
-func mapOrganization(host *models.Host, organization *github.Organization) models.Organization {
-	return models.Organization{
-		Id:          calculateUniqueIdentifier(host.Id, organization.GetLogin()),
-		Type:        "organization",
-		Host:        host.Id,
-		HostType:    host.SubType,
-		Url:         organization.GetHTMLURL(),
-		Name:        organization.GetLogin(),
-		Description: organization.GetDescription(),
-		RawData:     organization,
-	}
-}
-
-func calculateUniqueIdentifier(values ...string) string {
-	resultingValue := strings.Join(values, "|")
-	hashedValue := sha256.Sum256([]byte(resultingValue))
-
-	return fmt.Sprintf("%x", hashedValue)
-
 }
