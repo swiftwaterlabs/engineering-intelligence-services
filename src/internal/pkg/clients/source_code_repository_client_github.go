@@ -179,6 +179,7 @@ func mapOrganization(host *models.Host, organization *github.Organization) model
 		Id:          calculateUniqueIdentifier(host.Id, organization.GetLogin()),
 		Type:        "organization",
 		Host:        host.Id,
+		HostType:    host.SubType,
 		Url:         organization.GetHTMLURL(),
 		Name:        organization.GetLogin(),
 		Description: organization.GetDescription(),
