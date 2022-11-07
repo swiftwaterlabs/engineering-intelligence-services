@@ -31,23 +31,44 @@ resource "aws_glue_catalog_table" "user" {
       type = "string"
     }
 
-    columns {
-      name = "host"
-      type = "string"
-    }
 
     columns {
       name = "organization"
+      type = "struct<id:string, name:string, host:string, url:string, description:string>"
+    }
+
+    columns {
+      name = "name"
       type = "string"
     }
 
     columns {
-      name = "repository"
+      name = "url"
       type = "string"
     }
 
     columns {
-      name = "Url"
+      name = "defaultbranch"
+      type = "string"
+    }
+
+    columns {
+      name = "visibility"
+      type = "string"
+    }
+
+    columns {
+      name = "createdat"
+      type = "string"
+    }
+
+    columns {
+      name = "updatedat"
+      type = "string"
+    }
+
+    columns {
+      name = "contentsupdatedat"
       type = "string"
     }
   }
