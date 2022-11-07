@@ -31,23 +31,19 @@ resource "aws_glue_catalog_table" "user" {
       type = "string"
     }
 
-    columns {
-      name = "host"
-      type = "string"
-    }
 
     columns {
       name = "organization"
+      type = "struct<id:string, name:string, host:string, url:string, description:string>"
+    }
+
+    columns {
+      name = "name"
       type = "string"
     }
 
     columns {
-      name = "repository"
-      type = "string"
-    }
-
-    columns {
-      name = "Url"
+      name = "url"
       type = "string"
     }
   }
