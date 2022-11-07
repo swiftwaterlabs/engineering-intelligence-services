@@ -18,6 +18,28 @@ func ExtractRepositories(host string,
 	hostRepository repositories.HostRepository,
 	dataHub messaging.MessageHub) error {
 
+	err := extractRepositoryData(host, since, true, false, configurationService, hostRepository, dataHub)
+	return err
+}
+
+func ExtractRepositoryOwners(host string,
+	since *time.Time,
+	configurationService configuration.ConfigurationService,
+	hostRepository repositories.HostRepository,
+	dataHub messaging.MessageHub) error {
+
+	err := extractRepositoryData(host, since, false, true, configurationService, hostRepository, dataHub)
+	return err
+}
+
+func extractRepositoryData(host string,
+	since *time.Time,
+	includeRepositoryDetails bool,
+	includeOwners bool,
+	configurationService configuration.ConfigurationService,
+	hostRepository repositories.HostRepository,
+	dataHub messaging.MessageHub) error {
+
 	hosts, err := getHosts(host, models.HostTypeSourceCodeRepository, hostRepository)
 	if err != nil {
 		return err
@@ -33,7 +55,7 @@ func ExtractRepositories(host string,
 			defer hostWaitGroup.Done()
 
 			log.Printf("Procesing host:%s", host.Id)
-			err := processHostRepositories(host, configurationService, dataHub)
+			err := processHostRepositories(host, includeRepositoryDetails, includeOwners, configurationService, dataHub)
 			if err != nil {
 				log.Printf("Error when processing host:%s|%s", host.Id, err)
 			}
@@ -47,6 +69,8 @@ func ExtractRepositories(host string,
 }
 
 func processHostRepositories(host *models.Host,
+	includeRepositoryDetails bool,
+	includeOwners bool,
 	configurationService configuration.ConfigurationService,
 	dataHub messaging.MessageHub) error {
 
@@ -59,7 +83,8 @@ func processHostRepositories(host *models.Host,
 
 	counter := 0
 	log.Printf("Sending repositories from %s to %s", host.Name, publishingQueue)
-	handler := func(data []*models.Repository) {
+
+	repositoryHandler := func(data []*models.Repository) {
 		toPublish := core.ToInterfaceSlice(data)
 		err := dataHub.SendBulk(toPublish, publishingQueue)
 		if err != nil {
@@ -69,16 +94,17 @@ func processHostRepositories(host *models.Host,
 		log.Printf("Processed %v repositories from %s", counter, host.Name)
 	}
 
-	processingErr := client.ProcessRepositories(configurationService, handler)
+	ownerHandler := func(data []*models.RepositoryOwner) {
+		toPublish := core.ToInterfaceSlice(data)
+		err := dataHub.SendBulk(toPublish, publishingQueue)
+		if err != nil {
+			log.Println(err)
+		}
+		counter += len(data)
+		log.Printf("Processed %v repository owners from %s", counter, host.Name)
+	}
+
+	processingErr := client.ProcessRepositories(configurationService, includeRepositoryDetails, includeOwners, repositoryHandler, ownerHandler)
 
 	return processingErr
-}
-
-func ExtractRepositoryOwners(host string,
-	since *time.Time,
-	configurationService configuration.ConfigurationService,
-	hostRepository repositories.HostRepository,
-	dataHub messaging.MessageHub) error {
-
-	return nil
 }

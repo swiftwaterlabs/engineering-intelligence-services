@@ -19,7 +19,10 @@ const (
 )
 
 func (c *GithubSourceCodeRepositoryClient) ProcessRepositories(configurationService configuration.ConfigurationService,
-	repositoryHandler func(data []*models.Repository)) error {
+	includeRepositoryDetails bool,
+	includeOwners bool,
+	repositoryHandler func(data []*models.Repository),
+	ownerHandler func(data []*models.RepositoryOwner)) error {
 
 	hostSecret := configurationService.GetSecret(c.host.ClientSecretName)
 	client, err := getGitHubClient(c.host.SubType, c.host.BaseUrl, c.host.AuthenticationType, hostSecret)
@@ -28,10 +31,10 @@ func (c *GithubSourceCodeRepositoryClient) ProcessRepositories(configurationServ
 	}
 
 	if strings.EqualFold(githubClientTypeEnterpriseServer, c.host.SubType) {
-		return c.processAllOrganizationsOnHost(client, repositoryHandler)
+		return c.processAllOrganizationsOnHost(client, includeRepositoryDetails, includeOwners, repositoryHandler, ownerHandler)
 	}
 
-	return c.processAllMemberOrganizations(client, repositoryHandler)
+	return c.processAllMemberOrganizations(client, includeRepositoryDetails, includeOwners, repositoryHandler, ownerHandler)
 }
 
 func getGitHubClient(hostType string, baseUrl, authenticationType string, authenticationSecret string) (*github.Client, error) {
@@ -52,7 +55,10 @@ func getGitHubClient(hostType string, baseUrl, authenticationType string, authen
 }
 
 func (c *GithubSourceCodeRepositoryClient) processAllOrganizationsOnHost(client *github.Client,
-	repositoryHandler func(data []*models.Repository)) error {
+	includeRepositoryDetails bool,
+	includeOwners bool,
+	repositoryHandler func(data []*models.Repository),
+	ownerHandler func(data []*models.RepositoryOwner)) error {
 
 	listOptions := &github.OrganizationsListOptions{
 		ListOptions: github.ListOptions{PerPage: 100},
@@ -66,7 +72,7 @@ func (c *GithubSourceCodeRepositoryClient) processAllOrganizationsOnHost(client 
 		}
 
 		for _, item := range organizations {
-			err := c.processRepositoriesInOrganization(client, item, repositoryHandler)
+			err := c.processRepositoriesInOrganization(client, item, includeRepositoryDetails, includeOwners, repositoryHandler, ownerHandler)
 			if err != nil {
 				processingErrors = append(processingErrors, err)
 			}
@@ -92,7 +98,10 @@ func getLastOrganization(data []*github.Organization) int64 {
 }
 
 func (c *GithubSourceCodeRepositoryClient) processAllMemberOrganizations(client *github.Client,
-	repositoryHandler func(data []*models.Repository)) error {
+	includeRepositoryDetails bool,
+	includeOwners bool,
+	repositoryHandler func(data []*models.Repository),
+	ownerHandler func(data []*models.RepositoryOwner)) error {
 	listOptions := &github.ListOrgMembershipsOptions{
 		ListOptions: github.ListOptions{PerPage: 100},
 	}
@@ -105,7 +114,7 @@ func (c *GithubSourceCodeRepositoryClient) processAllMemberOrganizations(client 
 		}
 
 		for _, item := range memberOrganizations {
-			err = c.processRepositoriesInOrganization(client, item.GetOrganization(), repositoryHandler)
+			err = c.processRepositoriesInOrganization(client, item.GetOrganization(), includeRepositoryDetails, includeOwners, repositoryHandler, ownerHandler)
 			if err != nil {
 				processingErrors = append(processingErrors, err)
 			}
@@ -126,7 +135,10 @@ func (c *GithubSourceCodeRepositoryClient) processAllMemberOrganizations(client 
 
 func (c *GithubSourceCodeRepositoryClient) processRepositoriesInOrganization(client *github.Client,
 	organization *github.Organization,
-	repositoryHandler func(data []*models.Repository)) error {
+	includeRepositoryDetails bool,
+	includeOwners bool,
+	repositoryHandler func(data []*models.Repository),
+	ownerHandler func(data []*models.RepositoryOwner)) error {
 	opt := &github.RepositoryListByOrgOptions{
 		Sort:        "full_name",
 		Direction:   "asc",
@@ -145,8 +157,11 @@ func (c *GithubSourceCodeRepositoryClient) processRepositoriesInOrganization(cli
 			mappedData = append(mappedData, mappedItem)
 		}
 
-		if repositoryHandler != nil {
+		if includeRepositoryDetails && repositoryHandler != nil {
 			repositoryHandler(mappedData)
+		}
+		if includeOwners && ownerHandler != nil {
+			//TODO:get owner data
 		}
 
 		if response.NextPage == 0 {
