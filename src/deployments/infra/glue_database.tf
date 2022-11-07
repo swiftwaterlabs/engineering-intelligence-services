@@ -46,5 +46,30 @@ resource "aws_glue_catalog_table" "user" {
       name = "url"
       type = "string"
     }
+
+    columns {
+      name = "defaultbranch"
+      type = "string"
+    }
+
+    columns {
+      name = "visibility"
+      type = "string"
+    }
+
+    columns {
+      name = "createdat"
+      type = "string"
+    }
+
+    columns {
+      name = "updatedat"
+      type = "string"
+    }
+
+    columns {
+      name = "contentsupdatedat"
+      type = "string"
+    }
   }
 }

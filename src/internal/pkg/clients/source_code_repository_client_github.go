@@ -160,12 +160,17 @@ func (c *GithubSourceCodeRepositoryClient) processRepositoriesInOrganization(cli
 
 func mapRepository(host *models.Host, organization *github.Organization, repository *github.Repository) *models.Repository {
 	return &models.Repository{
-		Id:           calculateUniqueIdentifier(host.Id, organization.GetLogin(), repository.GetName()),
-		Type:         "repository",
-		Organization: mapOrganization(host, organization),
-		Name:         repository.GetName(),
-		Url:          repository.GetHTMLURL(),
-		RawData:      repository,
+		Id:                  calculateUniqueIdentifier(host.Id, organization.GetLogin(), repository.GetName()),
+		Type:                "repository",
+		Organization:        mapOrganization(host, organization),
+		Name:                repository.GetName(),
+		DefaultBranch:       repository.GetDefaultBranch(),
+		Url:                 repository.GetHTMLURL(),
+		Visibility:          repository.GetVisibility(),
+		CreatedAt:           repository.GetCreatedAt().Time,
+		UpdatedAt:           repository.GetUpdatedAt().Time,
+		ContentsLastUpdated: repository.GetPushedAt().Time,
+		RawData:             repository,
 	}
 }
 
