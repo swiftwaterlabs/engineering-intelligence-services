@@ -139,6 +139,16 @@ func (c *GithubSourceCodeRepositoryClient) processRepositoriesInOrganization(cli
 	includeOwners bool,
 	repositoryHandler func(data []*models.Repository),
 	ownerHandler func(data []*models.RepositoryOwner)) error {
+
+	var codeOwners map[string]map[string]*codeOwnerData
+	var err error
+	if includeOwners {
+		codeOwners, err = c.getCodeOwnersForOrganization(client, organization)
+		if err != nil {
+			return err
+		}
+	}
+
 	opt := &github.RepositoryListByOrgOptions{
 		Sort:        "full_name",
 		Direction:   "asc",
@@ -152,16 +162,23 @@ func (c *GithubSourceCodeRepositoryClient) processRepositoriesInOrganization(cli
 		}
 
 		mappedData := make([]*models.Repository, 0)
+		repositoryOwners := make([]*models.RepositoryOwner, 0)
 		for _, item := range repositories {
 			mappedItem := mapRepository(c.host, organization, item)
 			mappedData = append(mappedData, mappedItem)
+
+			if includeOwners {
+				ownerData := c.resolveRepositoryOwners(mappedItem.Name, codeOwners)
+				repositoryOwners = append(repositoryOwners, ownerData...)
+			}
 		}
 
 		if includeRepositoryDetails && repositoryHandler != nil {
 			repositoryHandler(mappedData)
 		}
+
 		if includeOwners && ownerHandler != nil {
-			//TODO:get owner data
+			ownerHandler(repositoryOwners)
 		}
 
 		if response.NextPage == 0 {
