@@ -3,6 +3,7 @@ package orchestration
 import (
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/clients"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/configuration"
+	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/core"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/messaging"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/models"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/repositories"
@@ -54,11 +55,21 @@ func processHostRepositories(host *models.Host,
 		return err
 	}
 
-	processor := func(data []*models.Repository) {
-		log.Println("Processing repos")
+	publishingQueue := configurationService.GetValue("engineering_intelligence_prd_ingestion_queue")
+
+	counter := 0
+	log.Printf("Sending repositories from %s to %s", host.Name, publishingQueue)
+	handler := func(data []*models.Repository) {
+		toPublish := core.ToInterfaceSlice(data)
+		err := dataHub.SendBulk(toPublish, publishingQueue)
+		if err != nil {
+			log.Println(err)
+		}
+		counter += len(data)
+		log.Printf("Processed %v repositories from %s", counter, host.Name)
 	}
 
-	processingErr := client.ProcessRepositories(configurationService, processor)
+	processingErr := client.ProcessRepositories(configurationService, handler)
 
 	return processingErr
 }

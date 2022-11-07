@@ -5,5 +5,6 @@ type Repository struct {
 	Organization Organization
 	Name         string
 	Url          string
+	Type         string
 	RawData      interface{}
 }
