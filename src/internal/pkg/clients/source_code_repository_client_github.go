@@ -7,6 +7,7 @@ import (
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/core"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/models"
 	"golang.org/x/oauth2"
+	"log"
 	"strings"
 )
 
@@ -19,7 +20,10 @@ const (
 )
 
 func (c *GithubSourceCodeRepositoryClient) ProcessRepositories(configurationService configuration.ConfigurationService,
-	processor func(data []*models.Repository)) error {
+	includeRepositoryDetails bool,
+	includeOwners bool,
+	repositoryHandler func(data []*models.Repository),
+	ownerHandler func(data []*models.RepositoryOwner)) error {
 
 	hostSecret := configurationService.GetSecret(c.host.ClientSecretName)
 	client, err := getGitHubClient(c.host.SubType, c.host.BaseUrl, c.host.AuthenticationType, hostSecret)
@@ -28,10 +32,10 @@ func (c *GithubSourceCodeRepositoryClient) ProcessRepositories(configurationServ
 	}
 
 	if strings.EqualFold(githubClientTypeEnterpriseServer, c.host.SubType) {
-		return c.processAllOrganizationsOnHost(client, processor)
+		return c.processAllOrganizationsOnHost(client, includeRepositoryDetails, includeOwners, repositoryHandler, ownerHandler)
 	}
 
-	return c.processAllMemberOrganizations(client, processor)
+	return c.processAllMemberOrganizations(client, includeRepositoryDetails, includeOwners, repositoryHandler, ownerHandler)
 }
 
 func getGitHubClient(hostType string, baseUrl, authenticationType string, authenticationSecret string) (*github.Client, error) {
@@ -52,7 +56,10 @@ func getGitHubClient(hostType string, baseUrl, authenticationType string, authen
 }
 
 func (c *GithubSourceCodeRepositoryClient) processAllOrganizationsOnHost(client *github.Client,
-	processor func(data []*models.Repository)) error {
+	includeRepositoryDetails bool,
+	includeOwners bool,
+	repositoryHandler func(data []*models.Repository),
+	ownerHandler func(data []*models.RepositoryOwner)) error {
 
 	listOptions := &github.OrganizationsListOptions{
 		ListOptions: github.ListOptions{PerPage: 100},
@@ -66,7 +73,7 @@ func (c *GithubSourceCodeRepositoryClient) processAllOrganizationsOnHost(client 
 		}
 
 		for _, item := range organizations {
-			err := c.processRepositoriesInOrganization(client, item, processor)
+			err := c.processRepositoriesInOrganization(client, item, includeRepositoryDetails, includeOwners, repositoryHandler, ownerHandler)
 			if err != nil {
 				processingErrors = append(processingErrors, err)
 			}
@@ -92,7 +99,10 @@ func getLastOrganization(data []*github.Organization) int64 {
 }
 
 func (c *GithubSourceCodeRepositoryClient) processAllMemberOrganizations(client *github.Client,
-	processor func(data []*models.Repository)) error {
+	includeRepositoryDetails bool,
+	includeOwners bool,
+	repositoryHandler func(data []*models.Repository),
+	ownerHandler func(data []*models.RepositoryOwner)) error {
 	listOptions := &github.ListOrgMembershipsOptions{
 		ListOptions: github.ListOptions{PerPage: 100},
 	}
@@ -105,7 +115,7 @@ func (c *GithubSourceCodeRepositoryClient) processAllMemberOrganizations(client 
 		}
 
 		for _, item := range memberOrganizations {
-			err = c.processRepositoriesInOrganization(client, item.GetOrganization(), processor)
+			err = c.processRepositoriesInOrganization(client, item.GetOrganization(), includeRepositoryDetails, includeOwners, repositoryHandler, ownerHandler)
 			if err != nil {
 				processingErrors = append(processingErrors, err)
 			}
@@ -126,7 +136,20 @@ func (c *GithubSourceCodeRepositoryClient) processAllMemberOrganizations(client 
 
 func (c *GithubSourceCodeRepositoryClient) processRepositoriesInOrganization(client *github.Client,
 	organization *github.Organization,
-	processor func(data []*models.Repository)) error {
+	includeRepositoryDetails bool,
+	includeOwners bool,
+	repositoryHandler func(data []*models.Repository),
+	ownerHandler func(data []*models.RepositoryOwner)) error {
+
+	var codeOwners map[string]map[string]*codeOwnerData
+	var err error
+	if includeOwners {
+		codeOwners, err = c.getCodeOwnersForOrganization(client, organization)
+		if err != nil && includeOwners {
+			log.Printf("Unable to find CODEOWNERS for %s", organization.GetURL())
+		}
+	}
+
 	opt := &github.RepositoryListByOrgOptions{
 		Sort:        "full_name",
 		Direction:   "asc",
@@ -140,11 +163,24 @@ func (c *GithubSourceCodeRepositoryClient) processRepositoriesInOrganization(cli
 		}
 
 		mappedData := make([]*models.Repository, 0)
+		repositoryOwners := make([]*models.RepositoryOwner, 0)
 		for _, item := range repositories {
 			mappedItem := mapRepository(c.host, organization, item)
 			mappedData = append(mappedData, mappedItem)
+
+			if includeOwners {
+				ownerData := c.resolveRepositoryOwners(client, mappedItem, codeOwners)
+				repositoryOwners = append(repositoryOwners, ownerData...)
+			}
 		}
-		processor(mappedData)
+
+		if includeRepositoryDetails && repositoryHandler != nil {
+			repositoryHandler(mappedData)
+		}
+
+		if includeOwners && ownerHandler != nil {
+			ownerHandler(repositoryOwners)
+		}
 
 		if response.NextPage == 0 {
 			break

@@ -9,7 +9,10 @@ import (
 
 type SourceCodeRepositoryClient interface {
 	ProcessRepositories(configurationService configuration.ConfigurationService,
-		processor func(data []*models.Repository)) error
+		includeRepositoryDetails bool,
+		includeOwners bool,
+		repositoryHandler func(data []*models.Repository),
+		ownerHandler func(data []*models.RepositoryOwner)) error
 }
 
 func NewSourceCodeRepositoryClient(host *models.Host) (SourceCodeRepositoryClient, error) {

@@ -13,9 +13,10 @@ import (
 )
 
 var (
-	hostArgument   = flag.String("host", "", "Host to search")
-	objectArgument = flag.String("object", "", "Type of object to search")
-	sinceArgument  = flag.String("since", "", "Only search for objects updated since this date")
+	hostArgument    = flag.String("host", "", "Host to search")
+	objectArgument  = flag.String("object", "", "Type of object to search")
+	includeArgument = flag.String("include", "", "Optional items to include")
+	sinceArgument   = flag.String("since", "", "Only search for objects updated since this date")
 )
 
 func main() {
@@ -31,11 +32,34 @@ func main() {
 	switch strings.ToLower(*objectArgument) {
 	case "repository":
 		since := core.ParseDate(sinceArgument)
-		err := orchestration.ExtractRepositories(*hostArgument, since, configurationService, directoryRepository, messageHub)
+
+		includeDetails, includeOwners := parseIncludeArguments()
+
+		err := orchestration.ExtractRepositories(*hostArgument, since, includeDetails, includeOwners, configurationService, directoryRepository, messageHub)
 		if err != nil {
 			log.Fatal(err)
 		}
 	default:
 		log.Fatalln("Unrecognized object")
 	}
+}
+
+func parseIncludeArguments() (bool, bool) {
+	includeDetails := true
+	includeOwners := false
+
+	if *includeArgument == "" {
+		includeDetails = true
+		includeOwners = false
+	}
+
+	if strings.Contains(*includeArgument, "owner") {
+		includeDetails = false
+		includeOwners = true
+	}
+
+	if strings.Contains(*includeArgument, "detail") {
+		includeDetails = true
+	}
+	return includeDetails, includeOwners
 }

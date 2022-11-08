@@ -13,5 +13,7 @@ type Repository struct {
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
 	Visibility          string
+	IsForkedRepository  bool
+	ForksCount          int
 	RawData             interface{}
 }

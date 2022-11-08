@@ -5,6 +5,14 @@ import (
 	"reflect"
 )
 
+func GetValueAt(slice []string, index int) string {
+	if len(slice) >= index+1 {
+		return slice[index]
+	}
+
+	return ""
+}
+
 func Segment(a []interface{}, chunkSize int) ([][]interface{}, error) {
 	if chunkSize < 1 {
 		return nil, errors.New("chunkSize must be greater that zero")
