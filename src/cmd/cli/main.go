@@ -35,8 +35,7 @@ func main() {
 		since := core.ParseDate(sinceArgument)
 
 		includeDetails, includeOwners, includePullRequests := parseIncludeArguments()
-		orgsToInclude := strings.Split(*orgsArgument, ",")
-
+		orgsToInclude := parseOrganizations()
 		err := orchestration.ExtractRepositories(*hostArgument, since, includeDetails, includeOwners, includePullRequests, orgsToInclude, configurationService, directoryRepository, messageHub)
 		if err != nil {
 			log.Fatal(err)
@@ -71,4 +70,11 @@ func parseIncludeArguments() (bool, bool, bool) {
 		includeDetails = true
 	}
 	return includeDetails, includeOwners, includePullRequests
+}
+
+func parseOrganizations() []string {
+	if strings.TrimSpace(*orgsArgument) == "" {
+		return make([]string, 0)
+	}
+	return strings.Split(*orgsArgument, ",")
 }
