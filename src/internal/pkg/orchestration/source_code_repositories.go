@@ -16,6 +16,7 @@ func ExtractRepositories(host string,
 	since *time.Time,
 	includeRepositoryDetails bool,
 	includeOwners bool,
+	includePullRequests bool,
 	configurationService configuration.ConfigurationService,
 	hostRepository repositories.HostRepository,
 	dataHub messaging.MessageHub) error {
@@ -35,7 +36,7 @@ func ExtractRepositories(host string,
 			defer hostWaitGroup.Done()
 
 			log.Printf("Procesing host:%s", host.Id)
-			err := processHostRepositories(host, includeRepositoryDetails, includeOwners, configurationService, dataHub)
+			err := processHostRepositories(host, includeRepositoryDetails, includeOwners, includePullRequests, since, configurationService, dataHub)
 			if err != nil {
 				log.Printf("Error when processing host:%s|%s", host.Id, err)
 			}
@@ -51,6 +52,8 @@ func ExtractRepositories(host string,
 func processHostRepositories(host *models.Host,
 	includeRepositoryDetails bool,
 	includeOwners bool,
+	includePullRequests bool,
+	since *time.Time,
 	configurationService configuration.ConfigurationService,
 	dataHub messaging.MessageHub) error {
 
@@ -84,7 +87,7 @@ func processHostRepositories(host *models.Host,
 		log.Printf("Processed %v repository owners from %s", repoOwnerCounter, host.Name)
 	}
 
-	processingErr := client.ProcessRepositories(configurationService, includeRepositoryDetails, includeOwners, repositoryHandler, ownerHandler)
+	processingErr := client.ProcessRepositories(configurationService, includeRepositoryDetails, includeOwners, includePullRequests, since, repositoryHandler, ownerHandler)
 
 	return processingErr
 }
