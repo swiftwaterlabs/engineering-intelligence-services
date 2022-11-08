@@ -66,16 +66,11 @@ resource "aws_glue_catalog_table" "repository" {
       name = "updatedat"
       type = "string"
     }
-
-    columns {
-      name = "contentsupdatedat"
-      type = "string"
-    }
   }
 }
 
 resource "aws_glue_catalog_table" "repository_owner" {
-  name          = "repository-owner"
+  name          = "repository_owner"
   database_name = aws_glue_catalog_database.object_db.name
 
   table_type = "EXTERNAL_TABLE"
