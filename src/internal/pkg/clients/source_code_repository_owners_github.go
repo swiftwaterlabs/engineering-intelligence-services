@@ -61,7 +61,7 @@ type codeOwnerData struct {
 	Contents     string
 }
 
-func (c *GithubSourceCodeRepositoryClient) resolveRepositoryOwners(repository *models.Repository,
+func (c *GithubSourceCodeRepositoryClient) resolveRepositoryOwners(client *github.Client, repository *models.Repository,
 	codeOwners map[string]map[string]*codeOwnerData) []*models.RepositoryOwner {
 
 	codeOwnerFile := c.coalesceCodeOwners(codeOwners[repository.Name]["CODEOWNERS"],
@@ -73,6 +73,8 @@ func (c *GithubSourceCodeRepositoryClient) resolveRepositoryOwners(repository *m
 	if codeOwnerFile == nil {
 		return make([]*models.RepositoryOwner, 0)
 	}
+
+	codeOwnerFile = c.getCodeOwnersWithContent(client, codeOwnerFile)
 	owners := c.parseCodeOwners(repository, codeOwnerFile.Contents)
 
 	return owners
@@ -86,6 +88,19 @@ func (c *GithubSourceCodeRepositoryClient) coalesceCodeOwners(items ...*codeOwne
 	}
 
 	return nil
+}
+
+func (s *GithubSourceCodeRepositoryClient) getCodeOwnersWithContent(client *github.Client, file *codeOwnerData) *codeOwnerData {
+	options := &github.RepositoryContentGetOptions{}
+	fileContent, _, _, err := client.Repositories.GetContents(context.Background(), file.Organization, file.Repository, file.Path, options)
+	if err == nil && fileContent != nil {
+		content, contentErr := fileContent.GetContent()
+		if contentErr == nil {
+			file.Contents = content
+		}
+	}
+
+	return file
 }
 
 func (c *GithubSourceCodeRepositoryClient) parseCodeOwners(repository *models.Repository, contents string) []*models.RepositoryOwner {
@@ -132,7 +147,6 @@ func (c *GithubSourceCodeRepositoryClient) parseCodeOwners(repository *models.Re
 			}
 		}
 	}
-
 	return c.mapRepositoryOwnersToSlice(owners)
 
 }

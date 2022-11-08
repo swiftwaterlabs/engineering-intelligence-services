@@ -168,7 +168,7 @@ func (c *GithubSourceCodeRepositoryClient) processRepositoriesInOrganization(cli
 			mappedData = append(mappedData, mappedItem)
 
 			if includeOwners {
-				ownerData := c.resolveRepositoryOwners(mappedItem, codeOwners)
+				ownerData := c.resolveRepositoryOwners(client, mappedItem, codeOwners)
 				repositoryOwners = append(repositoryOwners, ownerData...)
 			}
 		}
