@@ -87,7 +87,18 @@ func processHostRepositories(host *models.Host,
 		log.Printf("Processed %v repository owners from %s", repoOwnerCounter, host.Name)
 	}
 
-	processingErr := client.ProcessRepositories(configurationService, includeRepositoryDetails, includeOwners, includePullRequests, since, repositoryHandler, ownerHandler)
+	pullRequestCounter := 0
+	pullRequestHandler := func(data []*models.PullRequest) {
+		toPublish := core.ToInterfaceSlice(data)
+		err := dataHub.SendBulk(toPublish, publishingQueue)
+		if err != nil {
+			log.Println(err)
+		}
+		pullRequestCounter += len(data)
+		log.Printf("Processed %v repository pull requests from %s", pullRequestCounter, host.Name)
+	}
+
+	processingErr := client.ProcessRepositories(configurationService, includeRepositoryDetails, includeOwners, includePullRequests, since, repositoryHandler, ownerHandler, pullRequestHandler)
 
 	return processingErr
 }

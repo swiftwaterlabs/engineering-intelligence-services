@@ -15,7 +15,8 @@ type SourceCodeRepositoryClient interface {
 		includePullRequests bool,
 		since *time.Time,
 		repositoryHandler func(data []*models.Repository),
-		ownerHandler func(data []*models.RepositoryOwner)) error
+		ownerHandler func(data []*models.RepositoryOwner),
+		pullRequestHandler func(data []*models.PullRequest)) error
 }
 
 func NewSourceCodeRepositoryClient(host *models.Host) (SourceCodeRepositoryClient, error) {
