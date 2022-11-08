@@ -18,6 +18,8 @@ func mapRepository(host *models.Host, organization *github.Organization, reposit
 		CreatedAt:           repository.GetCreatedAt().Time,
 		UpdatedAt:           repository.GetUpdatedAt().Time,
 		ContentsLastUpdated: repository.GetPushedAt().Time,
+		IsForkedRepository:  repository.GetFork(),
+		ForksCount:          repository.GetForksCount(),
 		RawData:             repository,
 	}
 }
