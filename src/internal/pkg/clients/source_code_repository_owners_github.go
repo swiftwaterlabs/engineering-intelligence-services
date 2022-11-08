@@ -50,7 +50,8 @@ func (s *GithubSourceCodeRepositoryClient) getCodeOwnersForOrganization(client *
 		}
 		searchOptions.Page = response.NextPage
 	}
-
+	
+	s.getCodeOwnersContent(client, results)
 	return results, nil
 }
 
@@ -59,6 +60,22 @@ type codeOwnerData struct {
 	Repository   string
 	Path         string
 	Contents     string
+}
+
+func (s *GithubSourceCodeRepositoryClient) getCodeOwnersContent(client *github.Client,
+	organizationCodeOwners map[string]map[string]*codeOwnerData) {
+	options := &github.RepositoryContentGetOptions{}
+	for _, repositoryCodeOwners := range organizationCodeOwners {
+		for _, file := range repositoryCodeOwners {
+			fileContent, _, _, err := client.Repositories.GetContents(context.Background(), file.Organization, file.Repository, file.Path, options)
+			if err == nil && fileContent != nil {
+				content, contentErr := fileContent.GetContent()
+				if contentErr == nil {
+					file.Contents = content
+				}
+			}
+		}
+	}
 }
 
 func (c *GithubSourceCodeRepositoryClient) resolveRepositoryOwners(client *github.Client, repository *models.Repository,
@@ -74,7 +91,6 @@ func (c *GithubSourceCodeRepositoryClient) resolveRepositoryOwners(client *githu
 		return make([]*models.RepositoryOwner, 0)
 	}
 
-	codeOwnerFile = c.getCodeOwnersWithContent(client, codeOwnerFile)
 	owners := c.parseCodeOwners(repository, codeOwnerFile.Contents)
 
 	return owners
@@ -88,19 +104,6 @@ func (c *GithubSourceCodeRepositoryClient) coalesceCodeOwners(items ...*codeOwne
 	}
 
 	return nil
-}
-
-func (s *GithubSourceCodeRepositoryClient) getCodeOwnersWithContent(client *github.Client, file *codeOwnerData) *codeOwnerData {
-	options := &github.RepositoryContentGetOptions{}
-	fileContent, _, _, err := client.Repositories.GetContents(context.Background(), file.Organization, file.Repository, file.Path, options)
-	if err == nil && fileContent != nil {
-		content, contentErr := fileContent.GetContent()
-		if contentErr == nil {
-			file.Contents = content
-		}
-	}
-
-	return file
 }
 
 func (c *GithubSourceCodeRepositoryClient) parseCodeOwners(repository *models.Repository, contents string) []*models.RepositoryOwner {

@@ -26,14 +26,13 @@ func mapRepository(host *models.Host, organization *github.Organization, reposit
 
 func mapOrganization(host *models.Host, organization *github.Organization) models.Organization {
 	return models.Organization{
-		Id:          core.MapUniqueIdentifier(host.Id, organization.GetLogin()),
-		Type:        "organization",
-		Host:        host.Id,
-		HostType:    host.SubType,
-		Url:         organization.GetHTMLURL(),
-		Name:        organization.GetLogin(),
-		Description: organization.GetDescription(),
-		RawData:     organization,
+		Id:       core.MapUniqueIdentifier(host.Id, organization.GetLogin()),
+		Type:     "organization",
+		Host:     host.Id,
+		HostType: host.SubType,
+		Url:      organization.GetHTMLURL(),
+		Name:     organization.GetLogin(),
+		RawData:  organization,
 	}
 }
 

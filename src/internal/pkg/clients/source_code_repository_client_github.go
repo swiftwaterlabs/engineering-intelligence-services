@@ -146,7 +146,7 @@ func (c *GithubSourceCodeRepositoryClient) processRepositoriesInOrganization(cli
 	if includeOwners {
 		codeOwners, err = c.getCodeOwnersForOrganization(client, organization)
 		if err != nil && includeOwners {
-			log.Printf("Unable to find CODEOWNERS for %s", organization.GetLogin())
+			log.Printf("Unable to find CODEOWNERS for %s", organization.GetHTMLURL())
 		}
 	}
 
