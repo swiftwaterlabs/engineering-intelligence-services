@@ -16,6 +16,8 @@ func ExtractRepositories(host string,
 	since *time.Time,
 	includeRepositoryDetails bool,
 	includeOwners bool,
+	includePullRequests bool,
+	organizations []string,
 	configurationService configuration.ConfigurationService,
 	hostRepository repositories.HostRepository,
 	dataHub messaging.MessageHub) error {
@@ -35,7 +37,7 @@ func ExtractRepositories(host string,
 			defer hostWaitGroup.Done()
 
 			log.Printf("Procesing host:%s", host.Id)
-			err := processHostRepositories(host, includeRepositoryDetails, includeOwners, configurationService, dataHub)
+			err := processHostRepositories(host, includeRepositoryDetails, includeOwners, includePullRequests, since, organizations, configurationService, dataHub)
 			if err != nil {
 				log.Printf("Error when processing host:%s|%s", host.Id, err)
 			}
@@ -51,6 +53,9 @@ func ExtractRepositories(host string,
 func processHostRepositories(host *models.Host,
 	includeRepositoryDetails bool,
 	includeOwners bool,
+	includePullRequests bool,
+	since *time.Time,
+	organizations []string,
 	configurationService configuration.ConfigurationService,
 	dataHub messaging.MessageHub) error {
 
@@ -84,7 +89,18 @@ func processHostRepositories(host *models.Host,
 		log.Printf("Processed %v repository owners from %s", repoOwnerCounter, host.Name)
 	}
 
-	processingErr := client.ProcessRepositories(configurationService, includeRepositoryDetails, includeOwners, repositoryHandler, ownerHandler)
+	pullRequestCounter := 0
+	pullRequestHandler := func(data []*models.PullRequest) {
+		toPublish := core.ToInterfaceSlice(data)
+		err := dataHub.SendBulk(toPublish, publishingQueue)
+		if err != nil {
+			log.Println(err)
+		}
+		pullRequestCounter += len(data)
+		log.Printf("Processed %v repository pull requests from %s", pullRequestCounter, host.Name)
+	}
+
+	processingErr := client.ProcessRepositories(configurationService, includeRepositoryDetails, includeOwners, includePullRequests, since, organizations, repositoryHandler, ownerHandler, pullRequestHandler)
 
 	return processingErr
 }

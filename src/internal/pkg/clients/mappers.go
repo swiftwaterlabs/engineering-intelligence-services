@@ -8,7 +8,7 @@ import (
 
 func mapRepository(host *models.Host, organization *github.Organization, repository *github.Repository) *models.Repository {
 	return &models.Repository{
-		Id:                  core.MapUniqueIdentifier(host.Id, organization.GetLogin(), repository.GetName()),
+		Id:                  core.MapUniqueIdentifier(repository.GetURL()),
 		Type:                "repository",
 		Organization:        mapOrganization(host, organization),
 		Name:                repository.GetName(),
@@ -26,7 +26,7 @@ func mapRepository(host *models.Host, organization *github.Organization, reposit
 
 func mapOrganization(host *models.Host, organization *github.Organization) models.Organization {
 	return models.Organization{
-		Id:       core.MapUniqueIdentifier(host.Id, organization.GetLogin()),
+		Id:       core.MapUniqueIdentifier(organization.GetURL()),
 		Type:     "organization",
 		Host:     host.Id,
 		HostType: host.SubType,
@@ -38,7 +38,7 @@ func mapOrganization(host *models.Host, organization *github.Organization) model
 
 func mapRepositoryOwner(repository *models.Repository, pattern string, owner string, parentOwner string) *models.RepositoryOwner {
 	ownerData := &models.RepositoryOwner{
-		Id:             core.MapUniqueIdentifier(repository.Organization.Host, repository.Organization.Name, repository.Name, parentOwner, owner, pattern),
+		Id:             core.MapUniqueIdentifier(repository.Url, pattern, owner, parentOwner),
 		Type:           "repository-owner",
 		Organization:   repository.Organization,
 		RepositoryName: repository.Name,
@@ -47,4 +47,53 @@ func mapRepositoryOwner(repository *models.Repository, pattern string, owner str
 		ParentOwner:    parentOwner,
 	}
 	return ownerData
+}
+
+func mapPullRequest(repository *models.Repository,
+	pullRequest *github.PullRequest,
+	reviews []*github.PullRequestReview,
+	files []*github.CommitFile) *models.PullRequest {
+	ownerData := &models.PullRequest{
+		Id:           core.MapUniqueIdentifier(pullRequest.GetURL()),
+		Type:         "pull-request",
+		Repository:   repository,
+		TargetBranch: pullRequest.GetBase().GetRef(),
+		Url:          pullRequest.GetHTMLURL(),
+		Title:        pullRequest.GetTitle(),
+		Status:       pullRequest.GetState(),
+		IsMerged:     pullRequest.GetMerged(),
+		ClosedAt:     pullRequest.GetClosedAt(),
+		CreatedAt:    pullRequest.GetCreatedAt(),
+		CreatedBy:    pullRequest.GetUser().GetLogin(),
+		Reviews:      mapPullRequestReview(reviews),
+		Files:        mapPullRequestFiles(files),
+		RawData:      pullRequest,
+	}
+	return ownerData
+}
+
+func mapPullRequestReview(reviews []*github.PullRequestReview) []*models.PullRequestReview {
+	result := make([]*models.PullRequestReview, 0)
+
+	for _, item := range reviews {
+		mappedReview := &models.PullRequestReview{
+			Reviewer:   item.GetUser().GetLogin(),
+			Status:     item.GetState(),
+			ReviewedAt: item.GetSubmittedAt(),
+		}
+
+		result = append(result, mappedReview)
+	}
+
+	return result
+}
+
+func mapPullRequestFiles(files []*github.CommitFile) []string {
+	result := make([]string, 0)
+
+	for _, item := range files {
+		result = append(result, item.GetFilename())
+	}
+
+	return result
 }

@@ -126,3 +126,91 @@ resource "aws_glue_catalog_table" "repository_owner" {
 
   }
 }
+
+resource "aws_glue_catalog_table" "pull_request" {
+  name          = "pull_request"
+  database_name = aws_glue_catalog_database.object_db.name
+
+  table_type = "EXTERNAL_TABLE"
+
+  parameters = {
+    EXTERNAL              = "TRUE"
+  }
+
+  storage_descriptor {
+    location      = "s3://${local.signal_bucket_name}/pull-request"
+    input_format  = "org.apache.hadoop.mapred.TextInputFormat"
+    output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
+
+    ser_de_info {
+      name                  = "json"
+      serialization_library = "org.apache.hive.hcatalog.data.JsonSerDe"
+
+      parameters = {
+        "serialization.format" = 1
+      }
+    }
+
+    columns {
+      name = "id"
+      type = "string"
+    }
+
+
+    columns {
+      name = "repository"
+      type = "struct<id:string,name:string,organization:struct<id:string,name:string,host:string,hosttype:string,url:string>>"
+    }
+
+    columns {
+      name = "targetbranch"
+      type = "string"
+    }
+
+    columns {
+      name = "url"
+      type = "string"
+    }
+
+    columns {
+      name = "title"
+      type = "string"
+    }
+
+    columns {
+      name = "createdby"
+      type = "string"
+    }
+
+    columns {
+      name = "createdat"
+      type = "string"
+    }
+
+    columns {
+      name = "closedat"
+      type = "string"
+    }
+
+    columns {
+      name = "ismerged"
+      type = "boolean"
+    }
+
+    columns {
+      name = "status"
+      type = "string"
+    }
+
+    columns {
+      name="reviews"
+      type = "array<struct<reviewer:string,status:string,reviewedat:string>>"
+    }
+
+    columns {
+      name="files"
+      type="array<string>"
+    }
+
+  }
+}

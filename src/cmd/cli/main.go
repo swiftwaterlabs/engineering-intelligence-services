@@ -17,6 +17,7 @@ var (
 	objectArgument  = flag.String("object", "", "Type of object to search")
 	includeArgument = flag.String("include", "", "Optional items to include")
 	sinceArgument   = flag.String("since", "", "Only search for objects updated since this date")
+	orgsArgument    = flag.String("orgs", "", "Comma delimited list of organizations to extract data on")
 )
 
 func main() {
@@ -33,9 +34,10 @@ func main() {
 	case "repository":
 		since := core.ParseDate(sinceArgument)
 
-		includeDetails, includeOwners := parseIncludeArguments()
+		includeDetails, includeOwners, includePullRequests := parseIncludeArguments()
+		orgsToInclude := strings.Split(*orgsArgument, ",")
 
-		err := orchestration.ExtractRepositories(*hostArgument, since, includeDetails, includeOwners, configurationService, directoryRepository, messageHub)
+		err := orchestration.ExtractRepositories(*hostArgument, since, includeDetails, includeOwners, includePullRequests, orgsToInclude, configurationService, directoryRepository, messageHub)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -44,13 +46,15 @@ func main() {
 	}
 }
 
-func parseIncludeArguments() (bool, bool) {
+func parseIncludeArguments() (bool, bool, bool) {
 	includeDetails := true
 	includeOwners := false
+	includePullRequests := false
 
 	if *includeArgument == "" {
 		includeDetails = true
 		includeOwners = false
+		includePullRequests = false
 	}
 
 	if strings.Contains(*includeArgument, "owner") {
@@ -58,8 +62,13 @@ func parseIncludeArguments() (bool, bool) {
 		includeOwners = true
 	}
 
+	if strings.Contains(*includeArgument, "pullrequest") {
+		includeDetails = false
+		includePullRequests = true
+	}
+
 	if strings.Contains(*includeArgument, "detail") {
 		includeDetails = true
 	}
-	return includeDetails, includeOwners
+	return includeDetails, includeOwners, includePullRequests
 }
