@@ -68,7 +68,7 @@ func (c *GithubSourceCodeRepositoryClient) resolveRepositoryOwners(client *githu
 		codeOwners[repository.Name]["docs/CODEOWNERS"],
 		codeOwners[repository.Name][".github/CODEOWNERS"],
 		codeOwners["sfdc-codeowners"][fmt.Sprintf("%s/CODEOWNERS", repository.Name)],
-		codeOwners["sfdc-codeowners"]["sfdc-codeowners-ou/CODEOWNERS"],
+		codeOwners["sfdc-codeowners"]["sfdc-codeowners-uo/CODEOWNERS"],
 	)
 	if codeOwnerFile == nil {
 		return make([]*models.RepositoryOwner, 0)
