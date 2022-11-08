@@ -17,6 +17,7 @@ var (
 	objectArgument  = flag.String("object", "", "Type of object to search")
 	includeArgument = flag.String("include", "", "Optional items to include")
 	sinceArgument   = flag.String("since", "", "Only search for objects updated since this date")
+	orgsArgument    = flag.String("orgs", "", "Comma delimited list of organizations to extract data on")
 )
 
 func main() {
@@ -34,8 +35,9 @@ func main() {
 		since := core.ParseDate(sinceArgument)
 
 		includeDetails, includeOwners, includePullRequests := parseIncludeArguments()
+		orgsToInclude := strings.Split(*orgsArgument, ",")
 
-		err := orchestration.ExtractRepositories(*hostArgument, since, includeDetails, includeOwners, includePullRequests, configurationService, directoryRepository, messageHub)
+		err := orchestration.ExtractRepositories(*hostArgument, since, includeDetails, includeOwners, includePullRequests, orgsToInclude, configurationService, directoryRepository, messageHub)
 		if err != nil {
 			log.Fatal(err)
 		}
