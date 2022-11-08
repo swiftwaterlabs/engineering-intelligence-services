@@ -34,3 +34,16 @@ func mapOrganization(host *models.Host, organization *github.Organization) model
 		RawData:     organization,
 	}
 }
+
+func mapRepositoryOwner(repository *models.Repository, pattern string, owner string, parentOwner string) *models.RepositoryOwner {
+	ownerData := &models.RepositoryOwner{
+		Id:             core.MapUniqueIdentifier(repository.Organization.Host, repository.Organization.Name, repository.Name, parentOwner, owner, pattern),
+		Type:           "repository-owner",
+		Organization:   repository.Organization,
+		RepositoryName: repository.Name,
+		Pattern:        pattern,
+		Owner:          owner,
+		ParentOwner:    parentOwner,
+	}
+	return ownerData
+}

@@ -7,5 +7,5 @@ type RepositoryOwner struct {
 	RepositoryName string
 	Pattern        string
 	Owner          string
-	Team           string
+	ParentOwner    string
 }

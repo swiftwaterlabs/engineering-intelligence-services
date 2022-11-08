@@ -14,26 +14,6 @@ import (
 
 func ExtractRepositories(host string,
 	since *time.Time,
-	configurationService configuration.ConfigurationService,
-	hostRepository repositories.HostRepository,
-	dataHub messaging.MessageHub) error {
-
-	err := extractRepositoryData(host, since, true, false, configurationService, hostRepository, dataHub)
-	return err
-}
-
-func ExtractRepositoryOwners(host string,
-	since *time.Time,
-	configurationService configuration.ConfigurationService,
-	hostRepository repositories.HostRepository,
-	dataHub messaging.MessageHub) error {
-
-	err := extractRepositoryData(host, since, false, true, configurationService, hostRepository, dataHub)
-	return err
-}
-
-func extractRepositoryData(host string,
-	since *time.Time,
 	includeRepositoryDetails bool,
 	includeOwners bool,
 	configurationService configuration.ConfigurationService,
@@ -81,27 +61,27 @@ func processHostRepositories(host *models.Host,
 
 	publishingQueue := configurationService.GetValue("engineering_intelligence_prd_ingestion_queue")
 
-	counter := 0
 	log.Printf("Sending repositories from %s to %s", host.Name, publishingQueue)
-
+	repoCounter := 0
 	repositoryHandler := func(data []*models.Repository) {
 		toPublish := core.ToInterfaceSlice(data)
 		err := dataHub.SendBulk(toPublish, publishingQueue)
 		if err != nil {
 			log.Println(err)
 		}
-		counter += len(data)
-		log.Printf("Processed %v repositories from %s", counter, host.Name)
+		repoCounter += len(data)
+		log.Printf("Processed %v repositories from %s", repoCounter, host.Name)
 	}
 
+	repoOwnerCounter := 0
 	ownerHandler := func(data []*models.RepositoryOwner) {
 		toPublish := core.ToInterfaceSlice(data)
 		err := dataHub.SendBulk(toPublish, publishingQueue)
 		if err != nil {
 			log.Println(err)
 		}
-		counter += len(data)
-		log.Printf("Processed %v repository owners from %s", counter, host.Name)
+		repoOwnerCounter += len(data)
+		log.Printf("Processed %v repository owners from %s", repoOwnerCounter, host.Name)
 	}
 
 	processingErr := client.ProcessRepositories(configurationService, includeRepositoryDetails, includeOwners, repositoryHandler, ownerHandler)
