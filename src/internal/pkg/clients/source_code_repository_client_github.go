@@ -7,6 +7,7 @@ import (
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/core"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/models"
 	"golang.org/x/oauth2"
+	"log"
 	"strings"
 )
 
@@ -144,8 +145,8 @@ func (c *GithubSourceCodeRepositoryClient) processRepositoriesInOrganization(cli
 	var err error
 	if includeOwners {
 		codeOwners, err = c.getCodeOwnersForOrganization(client, organization)
-		if err != nil {
-			return err
+		if err != nil && includeOwners {
+			log.Printf("Unable to find CODEOWNERS for %s", organization.GetLogin())
 		}
 	}
 
