@@ -35,7 +35,8 @@ func (c *GithubSourceCodeRepositoryClient) processPullRequestsForRepository(clie
 			}
 
 			reviews := c.getPullRequestReviews(client, repository, item.GetNumber(), item.GetURL())
-			mappedPullRequest := mapPullRequest(repository, item, reviews)
+			files := c.getPullRequestFiles(client, repository, item.GetNumber(), item.GetURL())
+			mappedPullRequest := mapPullRequest(repository, item, reviews, files)
 			result = append(result, mappedPullRequest)
 
 		}
@@ -67,6 +68,37 @@ func (s *GithubSourceCodeRepositoryClient) getPullRequestReviews(client *github.
 		}
 
 		for _, item := range reviews {
+			result = append(result, item)
+		}
+
+		if response.NextPage == 0 {
+			break
+		}
+
+		options.Page = response.NextPage
+	}
+
+	return result
+}
+
+func (s *GithubSourceCodeRepositoryClient) getPullRequestFiles(client *github.Client,
+	repository *models.Repository,
+	prNumber int,
+	prUrl string) []*github.CommitFile {
+
+	options := &github.ListOptions{
+		Page:    0,
+		PerPage: 100,
+	}
+	result := make([]*github.CommitFile, 0)
+
+	for {
+		files, response, err := client.PullRequests.ListFiles(context.Background(), repository.Organization.Name, repository.Name, prNumber, options)
+		if err != nil {
+			log.Printf("Unable to retrieve files for %s", prUrl)
+		}
+
+		for _, item := range files {
 			result = append(result, item)
 		}
 

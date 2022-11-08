@@ -52,7 +52,8 @@ func mapRepositoryOwner(repository *models.Repository, pattern string, owner str
 
 func mapPullRequest(repository *models.Repository,
 	pullRequest *github.PullRequest,
-	reviews []*github.PullRequestReview) *models.PullRequest {
+	reviews []*github.PullRequestReview,
+	files []*github.CommitFile) *models.PullRequest {
 	ownerData := &models.PullRequest{
 		Id:              core.MapUniqueIdentifier(repository.Organization.Host, repository.Organization.Name, repository.Name, fmt.Sprint(pullRequest.GetNumber())),
 		Type:            "pull-request",
@@ -66,8 +67,10 @@ func mapPullRequest(repository *models.Repository,
 		CreatedAt:       pullRequest.GetCreatedAt(),
 		CreatedBy:       pullRequest.GetUser().GetLogin(),
 		Reviews:         mapPullRequestReview(reviews),
+		Files:           mapPullRequestFiles(files),
 		RawData:         pullRequest,
 		RawReviewerData: reviews,
+		RawFileData:     files,
 	}
 	return ownerData
 }
@@ -83,6 +86,16 @@ func mapPullRequestReview(reviews []*github.PullRequestReview) []*models.PullReq
 		}
 
 		result = append(result, mappedReview)
+	}
+
+	return result
+}
+
+func mapPullRequestFiles(files []*github.CommitFile) []string {
+	result := make([]string, 0)
+
+	for _, item := range files {
+		result = append(result, item.GetFilename())
 	}
 
 	return result

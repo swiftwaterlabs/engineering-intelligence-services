@@ -15,8 +15,10 @@ type PullRequest struct {
 	IsMerged        bool
 	Status          string
 	Reviews         []*PullRequestReview
+	Files           []string
 	RawData         interface{}
 	RawReviewerData interface{}
+	RawFileData     interface{}
 }
 
 type PullRequestReview struct {
