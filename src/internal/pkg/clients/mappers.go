@@ -1,7 +1,6 @@
 package clients
 
 import (
-	"fmt"
 	"github.com/google/go-github/v48/github"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/core"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/models"
@@ -9,7 +8,7 @@ import (
 
 func mapRepository(host *models.Host, organization *github.Organization, repository *github.Repository) *models.Repository {
 	return &models.Repository{
-		Id:                  core.MapUniqueIdentifier(host.Id, organization.GetLogin(), repository.GetName()),
+		Id:                  core.MapUniqueIdentifier(repository.GetURL()),
 		Type:                "repository",
 		Organization:        mapOrganization(host, organization),
 		Name:                repository.GetName(),
@@ -27,7 +26,7 @@ func mapRepository(host *models.Host, organization *github.Organization, reposit
 
 func mapOrganization(host *models.Host, organization *github.Organization) models.Organization {
 	return models.Organization{
-		Id:       core.MapUniqueIdentifier(host.Id, organization.GetLogin()),
+		Id:       core.MapUniqueIdentifier(organization.GetURL()),
 		Type:     "organization",
 		Host:     host.Id,
 		HostType: host.SubType,
@@ -39,7 +38,7 @@ func mapOrganization(host *models.Host, organization *github.Organization) model
 
 func mapRepositoryOwner(repository *models.Repository, pattern string, owner string, parentOwner string) *models.RepositoryOwner {
 	ownerData := &models.RepositoryOwner{
-		Id:             core.MapUniqueIdentifier(repository.Organization.Host, repository.Organization.Name, repository.Name, parentOwner, owner, pattern),
+		Id:             core.MapUniqueIdentifier(repository.Url, pattern, owner, parentOwner),
 		Type:           "repository-owner",
 		Organization:   repository.Organization,
 		RepositoryName: repository.Name,
@@ -55,13 +54,13 @@ func mapPullRequest(repository *models.Repository,
 	reviews []*github.PullRequestReview,
 	files []*github.CommitFile) *models.PullRequest {
 	ownerData := &models.PullRequest{
-		Id:           core.MapUniqueIdentifier(repository.Organization.Host, repository.Organization.Name, repository.Name, fmt.Sprint(pullRequest.GetNumber())),
+		Id:           core.MapUniqueIdentifier(pullRequest.GetURL()),
 		Type:         "pull-request",
 		Repository:   repository,
 		TargetBranch: pullRequest.GetBase().GetRef(),
 		Url:          pullRequest.GetHTMLURL(),
 		Title:        pullRequest.GetTitle(),
-		Status:       pullRequest.GetTitle(),
+		Status:       pullRequest.GetState(),
 		IsMerged:     pullRequest.GetMerged(),
 		ClosedAt:     pullRequest.GetClosedAt(),
 		CreatedAt:    pullRequest.GetCreatedAt(),
