@@ -56,6 +56,9 @@ func SegmentByJsonByteLength(a []interface{}, maximumByteLength int, maximumSlic
 			currentSize += itemLength
 		}
 	}
+	if len(current) != 0 {
+		result = append(result, current)
+	}
 
 	return result, nil
 }
