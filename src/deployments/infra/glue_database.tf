@@ -208,3 +208,71 @@ resource "aws_glue_catalog_table" "pull_request" {
 
   }
 }
+
+resource "aws_glue_catalog_table" "branch_rule" {
+  name          = "branch_rule"
+  database_name = aws_glue_catalog_database.object_db.name
+
+  table_type = "EXTERNAL_TABLE"
+
+  parameters = {
+    EXTERNAL              = "TRUE"
+  }
+
+  storage_descriptor {
+    location      = "s3://${local.signal_bucket_name}/branch-rule"
+    input_format  = "org.apache.hadoop.mapred.TextInputFormat"
+    output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
+
+    ser_de_info {
+      name                  = "json"
+      serialization_library = "org.apache.hive.hcatalog.data.JsonSerDe"
+
+      parameters = {
+        "serialization.format" = 1
+      }
+    }
+
+    columns {
+      name = "id"
+      type = "string"
+    }
+
+
+    columns {
+      name = "repository"
+      type = "struct<id:string,name:string,organization:struct<id:string,name:string,host:string,hosttype:string,url:string>>"
+    }
+
+    columns {
+      name = "branch"
+      type = "string"
+    }
+
+    columns {
+      name = "allowforcepush"
+      type = "boolean"
+    }
+
+    columns {
+      name = "requirepullrequest"
+      type = "boolean"
+    }
+
+    columns {
+      name = "requirepullrequestapprovals"
+      type = "boolean"
+    }
+
+    columns {
+      name = "requiredpullrequestapprovers"
+      type = "int"
+    }
+
+    columns {
+      name = "includeadministrators"
+      type = "boolean"
+    }
+
+  }
+}
