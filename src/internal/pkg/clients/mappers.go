@@ -96,3 +96,18 @@ func mapPullRequestFiles(files []*github.CommitFile) []string {
 
 	return result
 }
+
+func mapBranchProtectionRule(repository *models.Repository, branchName string, rule *github.Protection) *models.BranchProtectionRule {
+	return &models.BranchProtectionRule{
+		Id:                           core.MapUniqueIdentifier(repository.Url, branchName),
+		Type:                         "branch-rule",
+		Repository:                   repository,
+		Branch:                       core.SanitizeString(branchName),
+		AllowForcePush:               rule.GetAllowForcePushes().Enabled,
+		RequirePullRequest:           rule.RequiredPullRequestReviews != nil,
+		RequirePullRequestApprovals:  rule.GetRequiredPullRequestReviews().RequireCodeOwnerReviews,
+		RequiredPullRequestApprovers: rule.GetRequiredPullRequestReviews().RequiredApprovingReviewCount,
+		IncludeAdministrators:        rule.GetEnforceAdmins().Enabled,
+		RawData:                      rule,
+	}
+}

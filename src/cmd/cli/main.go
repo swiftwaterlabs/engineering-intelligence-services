@@ -5,6 +5,7 @@ import (
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/configuration"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/core"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/messaging"
+	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/models"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/orchestration"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/repositories"
 	"log"
@@ -32,11 +33,8 @@ func main() {
 
 	switch strings.ToLower(*objectArgument) {
 	case "repository":
-		since := core.ParseDate(sinceArgument)
-
-		includeDetails, includeOwners, includePullRequests := parseIncludeArguments()
-		orgsToInclude := parseOrganizations()
-		err := orchestration.ExtractRepositories(*hostArgument, since, includeDetails, includeOwners, includePullRequests, orgsToInclude, configurationService, directoryRepository, messageHub)
+		options := parseArguments()
+		err := orchestration.ExtractRepositories(*hostArgument, options, configurationService, directoryRepository, messageHub)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -45,36 +43,39 @@ func main() {
 	}
 }
 
-func parseIncludeArguments() (bool, bool, bool) {
-	includeDetails := true
-	includeOwners := false
-	includePullRequests := false
-
-	if *includeArgument == "" {
-		includeDetails = true
-		includeOwners = false
-		includePullRequests = false
+func parseArguments() *models.RepositoryProcessingOptions {
+	result := &models.RepositoryProcessingOptions{
+		IncludeDetails:      true,
+		IncludeOwners:       false,
+		IncludePullRequests: false,
+		IncludeBranchRules:  false,
+		IncludeWebhooks:     false,
+		Organizations:       make([]string, 0),
+		Since:               core.ParseDate(sinceArgument),
 	}
 
 	if strings.Contains(*includeArgument, "owner") {
-		includeDetails = false
-		includeOwners = true
+		result.IncludeDetails = false
+		result.IncludeOwners = true
 	}
 
 	if strings.Contains(*includeArgument, "pullrequest") {
-		includeDetails = false
-		includePullRequests = true
+		result.IncludeDetails = false
+		result.IncludePullRequests = true
+	}
+
+	if strings.Contains(*includeArgument, "branchrule") {
+		result.IncludeDetails = false
+		result.IncludeBranchRules = true
 	}
 
 	if strings.Contains(*includeArgument, "detail") {
-		includeDetails = true
+		result.IncludeDetails = true
 	}
-	return includeDetails, includeOwners, includePullRequests
-}
 
-func parseOrganizations() []string {
-	if strings.TrimSpace(*orgsArgument) == "" {
-		return make([]string, 0)
+	if strings.TrimSpace(*orgsArgument) != "" {
+		result.Organizations = strings.Split(*orgsArgument, ",")
 	}
-	return strings.Split(*orgsArgument, ",")
+
+	return result
 }

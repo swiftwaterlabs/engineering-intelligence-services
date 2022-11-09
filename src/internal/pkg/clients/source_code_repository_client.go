@@ -5,19 +5,12 @@ import (
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/configuration"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/models"
 	"strings"
-	"time"
 )
 
 type SourceCodeRepositoryClient interface {
 	ProcessRepositories(configurationService configuration.ConfigurationService,
-		includeRepositoryDetails bool,
-		includeOwners bool,
-		includePullRequests bool,
-		since *time.Time,
-		organizations []string,
-		repositoryHandler func(data []*models.Repository),
-		ownerHandler func(data []*models.RepositoryOwner),
-		pullRequestHandler func(data []*models.PullRequest)) error
+		options *models.RepositoryProcessingOptions,
+		handlers *RepositoryHandlers) error
 }
 
 func NewSourceCodeRepositoryClient(host *models.Host) (SourceCodeRepositoryClient, error) {
@@ -28,4 +21,11 @@ func NewSourceCodeRepositoryClient(host *models.Host) (SourceCodeRepositoryClien
 	}
 
 	return nil, errors.New("unrecognized host type")
+}
+
+type RepositoryHandlers struct {
+	Repository  func(data []*models.Repository)
+	Owner       func(data []*models.RepositoryOwner)
+	PullRequest func(data []*models.PullRequest)
+	BranchRule  func(data []*models.BranchProtectionRule)
 }
