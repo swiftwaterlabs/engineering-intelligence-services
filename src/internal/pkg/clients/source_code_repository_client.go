@@ -10,9 +10,7 @@ import (
 type SourceCodeRepositoryClient interface {
 	ProcessRepositories(configurationService configuration.ConfigurationService,
 		options *models.RepositoryProcessingOptions,
-		repositoryHandler func(data []*models.Repository),
-		ownerHandler func(data []*models.RepositoryOwner),
-		pullRequestHandler func(data []*models.PullRequest)) error
+		handlers *RepositoryHandlers) error
 }
 
 func NewSourceCodeRepositoryClient(host *models.Host) (SourceCodeRepositoryClient, error) {
@@ -23,4 +21,10 @@ func NewSourceCodeRepositoryClient(host *models.Host) (SourceCodeRepositoryClien
 	}
 
 	return nil, errors.New("unrecognized host type")
+}
+
+type RepositoryHandlers struct {
+	Repository  func(data []*models.Repository)
+	Owner       func(data []*models.RepositoryOwner)
+	PullRequest func(data []*models.PullRequest)
 }

@@ -57,9 +57,17 @@ func processHostRepositories(host *models.Host,
 
 	publishingQueue := configurationService.GetValue("engineering_intelligence_prd_ingestion_queue")
 
+	handlers := getDataHandlers(host, publishingQueue, dataHub)
 	log.Printf("Sending repositories from %s to %s", host.Name, publishingQueue)
+	processingErr := client.ProcessRepositories(configurationService, options, handlers)
+
+	return processingErr
+}
+
+func getDataHandlers(host *models.Host, publishingQueue string, dataHub messaging.MessageHub) *clients.RepositoryHandlers {
+	handlers := &clients.RepositoryHandlers{}
 	repoCounter := 0
-	repositoryHandler := func(data []*models.Repository) {
+	handlers.Repository = func(data []*models.Repository) {
 		toPublish := core.ToInterfaceSlice(data)
 		err := dataHub.SendBulk(toPublish, publishingQueue)
 		if err != nil {
@@ -70,7 +78,7 @@ func processHostRepositories(host *models.Host,
 	}
 
 	repoOwnerCounter := 0
-	ownerHandler := func(data []*models.RepositoryOwner) {
+	handlers.Owner = func(data []*models.RepositoryOwner) {
 		toPublish := core.ToInterfaceSlice(data)
 		err := dataHub.SendBulk(toPublish, publishingQueue)
 		if err != nil {
@@ -81,7 +89,7 @@ func processHostRepositories(host *models.Host,
 	}
 
 	pullRequestCounter := 0
-	pullRequestHandler := func(data []*models.PullRequest) {
+	handlers.PullRequest = func(data []*models.PullRequest) {
 		toPublish := core.ToInterfaceSlice(data)
 		err := dataHub.SendBulk(toPublish, publishingQueue)
 		if err != nil {
@@ -90,8 +98,5 @@ func processHostRepositories(host *models.Host,
 		pullRequestCounter += len(data)
 		log.Printf("Processed %v repository pull requests from %s", pullRequestCounter, host.Name)
 	}
-
-	processingErr := client.ProcessRepositories(configurationService, options, repositoryHandler, ownerHandler, pullRequestHandler)
-
-	return processingErr
+	return handlers
 }
