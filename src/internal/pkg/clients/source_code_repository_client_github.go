@@ -172,6 +172,13 @@ func (c *GithubSourceCodeRepositoryClient) processRepositoriesInOrganization(cli
 		}
 	}
 
+	webhooks := make([]*models.Webhook, 0)
+	if options.IncludeWebhooks {
+		mappedOrganization := mapOrganization(c.host, organization)
+		webhookData := c.processWebhookForOrganization(client, &mappedOrganization)
+		webhooks = append(webhooks, webhookData...)
+	}
+
 	opt := &github.RepositoryListByOrgOptions{
 		Sort:        "full_name",
 		Direction:   "asc",
@@ -209,6 +216,12 @@ func (c *GithubSourceCodeRepositoryClient) processRepositoriesInOrganization(cli
 				branchRuleData := c.processBranchProtectionrulesForRepository(client, mappedItem)
 				branchRules = append(branchRules, branchRuleData...)
 			}
+
+			if options.IncludeWebhooks {
+				log.Printf("Resolving Webhooks for %s", item.GetURL())
+				webhookData := c.processWebhookForRepository(client, mappedItem)
+				webhooks = append(webhooks, webhookData...)
+			}
 		}
 
 		if options.IncludeDetails && handlers.Repository != nil {
@@ -225,6 +238,10 @@ func (c *GithubSourceCodeRepositoryClient) processRepositoriesInOrganization(cli
 
 		if options.IncludeBranchRules && handlers.BranchRule != nil {
 			handlers.BranchRule(branchRules)
+		}
+
+		if options.IncludeWebhooks && handlers.Webhook != nil {
+			handlers.Webhook(webhooks)
 		}
 
 		if response.NextPage == 0 {

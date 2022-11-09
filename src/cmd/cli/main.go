@@ -69,6 +69,11 @@ func parseArguments() *models.RepositoryProcessingOptions {
 		result.IncludeBranchRules = true
 	}
 
+	if strings.Contains(*includeArgument, "hook") {
+		result.IncludeDetails = false
+		result.IncludeWebhooks = true
+	}
+
 	if strings.Contains(*includeArgument, "detail") {
 		result.IncludeDetails = true
 	}

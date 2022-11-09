@@ -109,5 +109,16 @@ func getDataHandlers(host *models.Host, publishingQueue string, dataHub messagin
 		branchRuleCounter += len(data)
 		log.Printf("Processed %v branch rules from %s", branchRuleCounter, host.Name)
 	}
+
+	webhookCounter := 0
+	handlers.Webhook = func(data []*models.Webhook) {
+		toPublish := core.ToInterfaceSlice(data)
+		err := dataHub.SendBulk(toPublish, publishingQueue)
+		if err != nil {
+			log.Println(err)
+		}
+		webhookCounter += len(data)
+		log.Printf("Processed %v wehooks from %s", webhookCounter, host.Name)
+	}
 	return handlers
 }

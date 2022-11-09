@@ -1,6 +1,7 @@
 package clients
 
 import (
+	"fmt"
 	"github.com/google/go-github/v48/github"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/core"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/models"
@@ -110,4 +111,50 @@ func mapBranchProtectionRule(repository *models.Repository, branchName string, r
 		IncludeAdministrators:        rule.GetEnforceAdmins().Enabled,
 		RawData:                      rule,
 	}
+}
+
+func mapOrganizationHook(organization *models.Organization, hook *github.Hook) *models.Webhook {
+	return &models.Webhook{
+		Id:           core.MapUniqueIdentifier(hook.GetURL()),
+		Type:         "webhook",
+		Source:       "organization",
+		Organization: organization,
+		Repository:   nil,
+		Events:       resolveWebhookEvents(hook),
+		Target:       resolveWebhookConfigValue(hook, "url"),
+		Active:       hook.GetActive(),
+		Name:         hook.GetName(),
+		RawData:      hook,
+	}
+}
+
+func mapRepositoryHook(repository *models.Repository, hook *github.Hook) *models.Webhook {
+	return &models.Webhook{
+		Id:           core.MapUniqueIdentifier(hook.GetURL()),
+		Type:         "webhook",
+		Source:       "repository",
+		Organization: nil,
+		Repository:   repository,
+		Events:       resolveWebhookEvents(hook),
+		Target:       resolveWebhookConfigValue(hook, "url"),
+		Active:       hook.GetActive(),
+		Name:         hook.GetName(),
+		RawData:      hook,
+	}
+}
+
+func resolveWebhookEvents(hook *github.Hook) []string {
+	if hook.Events == nil {
+		return make([]string, 0)
+	}
+
+	return hook.Events
+}
+
+func resolveWebhookConfigValue(hook *github.Hook, name string) string {
+	if hook.Config == nil {
+		return ""
+	}
+
+	return fmt.Sprint(hook.Config[name])
 }
