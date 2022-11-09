@@ -9,15 +9,10 @@ import (
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/repositories"
 	"log"
 	"sync"
-	"time"
 )
 
 func ExtractRepositories(host string,
-	since *time.Time,
-	includeRepositoryDetails bool,
-	includeOwners bool,
-	includePullRequests bool,
-	organizations []string,
+	options *models.RepositoryProcessingOptions,
 	configurationService configuration.ConfigurationService,
 	hostRepository repositories.HostRepository,
 	dataHub messaging.MessageHub) error {
@@ -31,19 +26,19 @@ func ExtractRepositories(host string,
 	for _, item := range hosts {
 		hostWaitGroup.Add(1)
 		processor := func(host *models.Host,
-			since *time.Time,
+			options *models.RepositoryProcessingOptions,
 			configurationService configuration.ConfigurationService,
 			dataHub messaging.MessageHub) {
 			defer hostWaitGroup.Done()
 
 			log.Printf("Procesing host:%s", host.Id)
-			err := processHostRepositories(host, includeRepositoryDetails, includeOwners, includePullRequests, since, organizations, configurationService, dataHub)
+			err := processHostRepositories(host, options, configurationService, dataHub)
 			if err != nil {
 				log.Printf("Error when processing host:%s|%s", host.Id, err)
 			}
 		}
 
-		go processor(item, since, configurationService, dataHub)
+		go processor(item, options, configurationService, dataHub)
 	}
 	hostWaitGroup.Wait()
 
@@ -51,11 +46,7 @@ func ExtractRepositories(host string,
 }
 
 func processHostRepositories(host *models.Host,
-	includeRepositoryDetails bool,
-	includeOwners bool,
-	includePullRequests bool,
-	since *time.Time,
-	organizations []string,
+	options *models.RepositoryProcessingOptions,
 	configurationService configuration.ConfigurationService,
 	dataHub messaging.MessageHub) error {
 
@@ -100,7 +91,7 @@ func processHostRepositories(host *models.Host,
 		log.Printf("Processed %v repository pull requests from %s", pullRequestCounter, host.Name)
 	}
 
-	processingErr := client.ProcessRepositories(configurationService, includeRepositoryDetails, includeOwners, includePullRequests, since, organizations, repositoryHandler, ownerHandler, pullRequestHandler)
+	processingErr := client.ProcessRepositories(configurationService, options, repositoryHandler, ownerHandler, pullRequestHandler)
 
 	return processingErr
 }

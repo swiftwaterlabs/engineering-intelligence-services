@@ -5,16 +5,11 @@ import (
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/configuration"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/models"
 	"strings"
-	"time"
 )
 
 type SourceCodeRepositoryClient interface {
 	ProcessRepositories(configurationService configuration.ConfigurationService,
-		includeRepositoryDetails bool,
-		includeOwners bool,
-		includePullRequests bool,
-		since *time.Time,
-		organizations []string,
+		options *models.RepositoryProcessingOptions,
 		repositoryHandler func(data []*models.Repository),
 		ownerHandler func(data []*models.RepositoryOwner),
 		pullRequestHandler func(data []*models.PullRequest)) error
