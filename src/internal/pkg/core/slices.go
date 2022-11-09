@@ -27,6 +27,10 @@ func Segment(a []interface{}, chunkSize int) ([][]interface{}, error) {
 }
 
 func SegmentByJsonByteLength(a []interface{}, maximumByteLength int, maximumSliceLength int) ([][]interface{}, error) {
+	if a == nil || len(a) == 0 {
+		return make([][]interface{}, 0, 0), nil
+	}
+
 	if maximumByteLength < 1 {
 		return nil, errors.New("maximum byte length must be greater that zero")
 	}
