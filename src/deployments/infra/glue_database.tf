@@ -98,15 +98,9 @@ resource "aws_glue_catalog_table" "repository_owner" {
       type = "string"
     }
 
-
     columns {
-      name = "organization"
-      type = "struct<id:string,name:string,host:string,hosttype:string,url:string>"
-    }
-
-    columns {
-      name = "repositoryname"
-      type = "string"
+      name = "repository"
+      type = "struct<id:string,name:string,organization:struct<id:string,name:string,host:string,hosttype:string,url:string>>"
     }
 
     columns {
