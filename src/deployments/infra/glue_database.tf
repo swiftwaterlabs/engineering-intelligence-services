@@ -276,3 +276,70 @@ resource "aws_glue_catalog_table" "branch_rule" {
 
   }
 }
+
+resource "aws_glue_catalog_table" "webhook" {
+  name          = "webhook"
+  database_name = aws_glue_catalog_database.object_db.name
+
+  table_type = "EXTERNAL_TABLE"
+
+  parameters = {
+    EXTERNAL              = "TRUE"
+  }
+
+  storage_descriptor {
+    location      = "s3://${local.signal_bucket_name}/webhook"
+    input_format  = "org.apache.hadoop.mapred.TextInputFormat"
+    output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
+
+    ser_de_info {
+      name                  = "json"
+      serialization_library = "org.apache.hive.hcatalog.data.JsonSerDe"
+
+      parameters = {
+        "serialization.format" = 1
+      }
+    }
+
+    columns {
+      name = "id"
+      type = "string"
+    }
+
+    columns {
+      name = "name"
+      type = "string"
+    }
+
+    columns {
+      name = "source"
+      type = "string"
+    }
+
+    columns{
+      name = "organization"
+      type = "struct<id:string,name:string,host:string,hosttype:string,url:string>"
+    }
+
+    columns {
+      name = "repository"
+      type = "struct<id:string,name:string,organization:struct<id:string,name:string,host:string,hosttype:string,url:string>>"
+    }
+
+    columns {
+      name = "target"
+      type = "string"
+    }
+
+    columns {
+      name = "events"
+      type = "array<string>"
+    }
+
+    columns {
+      name = "active"
+      type = "boolean"
+    }
+
+  }
+}
