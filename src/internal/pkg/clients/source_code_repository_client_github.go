@@ -187,6 +187,7 @@ func (c *GithubSourceCodeRepositoryClient) processRepositoriesInOrganization(cli
 		mappedData := make([]*models.Repository, 0)
 		repositoryOwners := make([]*models.RepositoryOwner, 0)
 		pullRequests := make([]*models.PullRequest, 0)
+		branchRules := make([]*models.BranchProtectionRule, 0)
 		for _, item := range repositories {
 			mappedItem := mapRepository(c.host, organization, item)
 			mappedData = append(mappedData, mappedItem)
@@ -202,6 +203,12 @@ func (c *GithubSourceCodeRepositoryClient) processRepositoriesInOrganization(cli
 				pullRequestData := c.processPullRequestsForRepository(client, mappedItem, options.Since)
 				pullRequests = append(pullRequests, pullRequestData...)
 			}
+
+			if options.IncludeBranchRules {
+				log.Printf("Resolving Branch Rules for %s", item.GetURL())
+				branchRuleData := c.processBranchProtectionrulesForRepository(client, mappedItem)
+				branchRules = append(branchRules, branchRuleData...)
+			}
 		}
 
 		if options.IncludeDetails && handlers.Repository != nil {
@@ -214,6 +221,10 @@ func (c *GithubSourceCodeRepositoryClient) processRepositoriesInOrganization(cli
 
 		if options.IncludePullRequests && handlers.PullRequest != nil {
 			handlers.PullRequest(pullRequests)
+		}
+
+		if options.IncludeBranchRules && handlers.BranchRule != nil {
+			handlers.BranchRule(branchRules)
 		}
 
 		if response.NextPage == 0 {

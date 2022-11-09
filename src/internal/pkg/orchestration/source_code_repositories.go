@@ -98,5 +98,16 @@ func getDataHandlers(host *models.Host, publishingQueue string, dataHub messagin
 		pullRequestCounter += len(data)
 		log.Printf("Processed %v repository pull requests from %s", pullRequestCounter, host.Name)
 	}
+
+	branchRuleCounter := 0
+	handlers.BranchRule = func(data []*models.BranchProtectionRule) {
+		toPublish := core.ToInterfaceSlice(data)
+		err := dataHub.SendBulk(toPublish, publishingQueue)
+		if err != nil {
+			log.Println(err)
+		}
+		branchRuleCounter += len(data)
+		log.Printf("Processed %v branch rules from %s", branchRuleCounter, host.Name)
+	}
 	return handlers
 }

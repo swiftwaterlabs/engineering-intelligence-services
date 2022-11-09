@@ -27,4 +27,5 @@ type RepositoryHandlers struct {
 	Repository  func(data []*models.Repository)
 	Owner       func(data []*models.RepositoryOwner)
 	PullRequest func(data []*models.PullRequest)
+	BranchRule  func(data []*models.BranchProtectionRule)
 }
