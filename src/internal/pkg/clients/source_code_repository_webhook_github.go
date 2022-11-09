@@ -23,7 +23,7 @@ func (c *GithubSourceCodeRepositoryClient) processWebhookForOrganization(client 
 		}
 
 		for _, item := range data {
-			mappedItem := mapOrganizationHook(organization, item)
+			mappedItem := mapWebHook(organization, nil, item)
 			result = append(result, mappedItem)
 		}
 
@@ -52,7 +52,7 @@ func (c *GithubSourceCodeRepositoryClient) processWebhookForRepository(client *g
 		}
 
 		for _, item := range data {
-			mappedItem := mapRepositoryHook(repository, item)
+			mappedItem := mapWebHook(nil, repository, item)
 			result = append(result, mappedItem)
 		}
 

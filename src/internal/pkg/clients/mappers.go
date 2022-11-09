@@ -113,32 +113,17 @@ func mapBranchProtectionRule(repository *models.Repository, branchName string, r
 	}
 }
 
-func mapOrganizationHook(organization *models.Organization, hook *github.Hook) *models.Webhook {
+func mapWebHook(organization *models.Organization, repository *models.Repository, hook *github.Hook) *models.Webhook {
 	return &models.Webhook{
 		Id:           core.MapUniqueIdentifier(hook.GetURL()),
 		Type:         "webhook",
-		Source:       "organization",
+		Source:       core.SanitizeString(hook.GetType()),
 		Organization: organization,
-		Repository:   nil,
-		Events:       resolveWebhookEvents(hook),
-		Target:       resolveWebhookConfigValue(hook, "url"),
-		Active:       hook.GetActive(),
-		Name:         hook.GetName(),
-		RawData:      hook,
-	}
-}
-
-func mapRepositoryHook(repository *models.Repository, hook *github.Hook) *models.Webhook {
-	return &models.Webhook{
-		Id:           core.MapUniqueIdentifier(hook.GetURL()),
-		Type:         "webhook",
-		Source:       "repository",
-		Organization: nil,
 		Repository:   repository,
 		Events:       resolveWebhookEvents(hook),
-		Target:       resolveWebhookConfigValue(hook, "url"),
+		Target:       core.SanitizeString(resolveWebhookConfigValue(hook, "url")),
 		Active:       hook.GetActive(),
-		Name:         hook.GetName(),
+		Name:         core.SanitizeString(hook.GetName()),
 		RawData:      hook,
 	}
 }
