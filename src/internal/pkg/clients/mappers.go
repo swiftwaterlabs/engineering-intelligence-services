@@ -11,10 +11,10 @@ func mapRepository(host *models.Host, organization *github.Organization, reposit
 		Id:                  core.MapUniqueIdentifier(repository.GetURL()),
 		Type:                "repository",
 		Organization:        mapOrganization(host, organization),
-		Name:                repository.GetName(),
-		DefaultBranch:       repository.GetDefaultBranch(),
-		Url:                 repository.GetHTMLURL(),
-		Visibility:          repository.GetVisibility(),
+		Name:                core.SanitizeString(repository.GetName()),
+		DefaultBranch:       core.SanitizeString(repository.GetDefaultBranch()),
+		Url:                 core.SanitizeString(repository.GetHTMLURL()),
+		Visibility:          core.SanitizeString(repository.GetVisibility()),
 		CreatedAt:           repository.GetCreatedAt().Time,
 		UpdatedAt:           repository.GetUpdatedAt().Time,
 		ContentsLastUpdated: repository.GetPushedAt().Time,
@@ -28,23 +28,22 @@ func mapOrganization(host *models.Host, organization *github.Organization) model
 	return models.Organization{
 		Id:       core.MapUniqueIdentifier(organization.GetURL()),
 		Type:     "organization",
-		Host:     host.Id,
-		HostType: host.SubType,
-		Url:      organization.GetHTMLURL(),
-		Name:     organization.GetLogin(),
+		Host:     core.SanitizeString(host.Id),
+		HostType: core.SanitizeString(host.SubType),
+		Url:      core.SanitizeString(organization.GetHTMLURL()),
+		Name:     core.SanitizeString(organization.GetLogin()),
 		RawData:  organization,
 	}
 }
 
 func mapRepositoryOwner(repository *models.Repository, pattern string, owner string, parentOwner string) *models.RepositoryOwner {
 	ownerData := &models.RepositoryOwner{
-		Id:             core.MapUniqueIdentifier(repository.Url, pattern, owner, parentOwner),
-		Type:           "repository-owner",
-		Organization:   repository.Organization,
-		RepositoryName: repository.Name,
-		Pattern:        pattern,
-		Owner:          owner,
-		ParentOwner:    parentOwner,
+		Id:          core.MapUniqueIdentifier(repository.Url, pattern, owner, parentOwner),
+		Type:        "repository-owner",
+		Repository:  repository,
+		Pattern:     core.SanitizeString(pattern),
+		Owner:       core.SanitizeString(owner),
+		ParentOwner: core.SanitizeString(parentOwner),
 	}
 	return ownerData
 }
@@ -57,14 +56,14 @@ func mapPullRequest(repository *models.Repository,
 		Id:           core.MapUniqueIdentifier(pullRequest.GetURL()),
 		Type:         "pull-request",
 		Repository:   repository,
-		TargetBranch: pullRequest.GetBase().GetRef(),
-		Url:          pullRequest.GetHTMLURL(),
-		Title:        pullRequest.GetTitle(),
-		Status:       pullRequest.GetState(),
+		TargetBranch: core.SanitizeString(pullRequest.GetBase().GetRef()),
+		Url:          core.SanitizeString(pullRequest.GetHTMLURL()),
+		Title:        core.SanitizeString(pullRequest.GetTitle()),
+		Status:       core.SanitizeString(pullRequest.GetState()),
 		IsMerged:     pullRequest.GetMerged(),
 		ClosedAt:     pullRequest.GetClosedAt(),
 		CreatedAt:    pullRequest.GetCreatedAt(),
-		CreatedBy:    pullRequest.GetUser().GetLogin(),
+		CreatedBy:    core.SanitizeString(pullRequest.GetUser().GetLogin()),
 		Reviews:      mapPullRequestReview(reviews),
 		Files:        mapPullRequestFiles(files),
 		RawData:      pullRequest,
@@ -77,8 +76,8 @@ func mapPullRequestReview(reviews []*github.PullRequestReview) []*models.PullReq
 
 	for _, item := range reviews {
 		mappedReview := &models.PullRequestReview{
-			Reviewer:   item.GetUser().GetLogin(),
-			Status:     item.GetState(),
+			Reviewer:   core.SanitizeString(item.GetUser().GetLogin()),
+			Status:     core.SanitizeString(item.GetState()),
 			ReviewedAt: item.GetSubmittedAt(),
 		}
 
@@ -92,7 +91,7 @@ func mapPullRequestFiles(files []*github.CommitFile) []string {
 	result := make([]string, 0)
 
 	for _, item := range files {
-		result = append(result, item.GetFilename())
+		result = append(result, core.SanitizeString(item.GetFilename()))
 	}
 
 	return result
