@@ -50,7 +50,7 @@ func (s *GithubSourceCodeRepositoryClient) getCodeOwnersForOrganization(client *
 		}
 		searchOptions.Page = response.NextPage
 	}
-	
+
 	s.getCodeOwnersContent(client, results)
 	return results, nil
 }
@@ -81,19 +81,43 @@ func (s *GithubSourceCodeRepositoryClient) getCodeOwnersContent(client *github.C
 func (c *GithubSourceCodeRepositoryClient) resolveRepositoryOwners(client *github.Client, repository *models.Repository,
 	codeOwners map[string]map[string]*codeOwnerData) []*models.RepositoryOwner {
 
-	codeOwnerFile := c.coalesceCodeOwners(codeOwners[repository.Name]["CODEOWNERS"],
+	repositoryCodeOwner := c.coalesceCodeOwners(codeOwners[repository.Name]["CODEOWNERS"],
 		codeOwners[repository.Name]["docs/CODEOWNERS"],
-		codeOwners[repository.Name][".github/CODEOWNERS"],
+		codeOwners[repository.Name][".github/CODEOWNERS"])
+	organizationCodeOwner := c.coalesceCodeOwners(
 		codeOwners["sfdc-codeowners"][fmt.Sprintf("%s/CODEOWNERS", repository.Name)],
-		codeOwners["sfdc-codeowners"]["sfdc-codeowners-uo/CODEOWNERS"],
-	)
-	if codeOwnerFile == nil {
-		return make([]*models.RepositoryOwner, 0)
+		codeOwners["sfdc-codeowners"]["sfdc-codeowners-uo/CODEOWNERS"])
+
+	repositoryCodeOwners := make([]*models.RepositoryOwner, 0)
+	if repositoryCodeOwner != nil {
+		data := c.parseCodeOwners(repository, repositoryCodeOwner.Contents)
+		repositoryCodeOwners = append(repositoryCodeOwners, data...)
 	}
 
-	owners := c.parseCodeOwners(repository, codeOwnerFile.Contents)
+	organizationCodeOwners := make([]*models.RepositoryOwner, 0)
+	if organizationCodeOwner != nil {
+		data := c.parseCodeOwners(repository, organizationCodeOwner.Contents)
+		organizationCodeOwners = append(organizationCodeOwners, data...)
+	}
 
-	return owners
+	c.applyOrganizationDefaults(repositoryCodeOwners, organizationCodeOwners)
+
+	if len(repositoryCodeOwners) > 0 {
+		return repositoryCodeOwners
+	}
+
+	return organizationCodeOwners
+}
+
+func (c *GithubSourceCodeRepositoryClient) applyOrganizationDefaults(repositoryCodeOwners []*models.RepositoryOwner,
+	organizationCodeOwners []*models.RepositoryOwner) {
+	for _, item := range repositoryCodeOwners {
+		for _, orgItem := range organizationCodeOwners {
+			if item.ParentOwner == "" {
+				item.ParentOwner = orgItem.ParentOwner
+			}
+		}
+	}
 }
 
 func (c *GithubSourceCodeRepositoryClient) coalesceCodeOwners(items ...*codeOwnerData) *codeOwnerData {
