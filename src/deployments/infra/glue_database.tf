@@ -19,7 +19,7 @@ resource "aws_glue_catalog_table" "repository" {
 
     ser_de_info {
       name                  = "json"
-      serialization_library = "org.apache.hive.hcatalog.data.JsonSerDe"
+      serialization_library = "org.openx.data.jsonserde.JsonSerDe"
 
       parameters = {
         "serialization.format" = 1
@@ -86,7 +86,7 @@ resource "aws_glue_catalog_table" "repository_owner" {
 
     ser_de_info {
       name                  = "json"
-      serialization_library = "org.apache.hive.hcatalog.data.JsonSerDe"
+      serialization_library = "org.openx.data.jsonserde.JsonSerDe"
 
       parameters = {
         "serialization.format" = 1
@@ -138,7 +138,7 @@ resource "aws_glue_catalog_table" "pull_request" {
 
     ser_de_info {
       name                  = "json"
-      serialization_library = "org.apache.hive.hcatalog.data.JsonSerDe"
+      serialization_library = "org.openx.data.jsonserde.JsonSerDe"
 
       parameters = {
         "serialization.format" = 1
@@ -226,7 +226,7 @@ resource "aws_glue_catalog_table" "branch_rule" {
 
     ser_de_info {
       name                  = "json"
-      serialization_library = "org.apache.hive.hcatalog.data.JsonSerDe"
+      serialization_library = "org.openx.data.jsonserde.JsonSerDe"
 
       parameters = {
         "serialization.format" = 1
@@ -294,7 +294,7 @@ resource "aws_glue_catalog_table" "webhook" {
 
     ser_de_info {
       name                  = "json"
-      serialization_library = "org.apache.hive.hcatalog.data.JsonSerDe"
+      serialization_library = "org.openx.data.jsonserde.JsonSerDe"
 
       parameters = {
         "serialization.format" = 1
