@@ -14,11 +14,12 @@ import (
 )
 
 var (
-	hostArgument    = flag.String("host", "", "Host to search")
-	objectArgument  = flag.String("object", "", "Type of object to search")
-	includeArgument = flag.String("include", "", "Optional items to include")
-	sinceArgument   = flag.String("since", "", "Only search for objects updated since this date")
-	orgsArgument    = flag.String("orgs", "", "Comma delimited list of organizations to extract data on")
+	hostArgument     = flag.String("host", "", "Host to search")
+	objectArgument   = flag.String("object", "", "Type of object to search")
+	includeArgument  = flag.String("include", "", "Optional items to include")
+	sinceArgument    = flag.String("since", "", "Only search for objects updated since this date")
+	orgsArgument     = flag.String("orgs", "", "Comma delimited list of organizations to extract data on")
+	projectsArgument = flag.String("projects", "", "Comma delimited list of projects to extract data on")
 )
 
 func main() {
@@ -33,8 +34,14 @@ func main() {
 
 	switch strings.ToLower(*objectArgument) {
 	case "repository":
-		options := parseArguments()
+		options := parseRepositoryArguments()
 		err := orchestration.ExtractRepositories(*hostArgument, options, configurationService, directoryRepository, messageHub)
+		if err != nil {
+			log.Fatal(err)
+		}
+	case "testresult":
+		options := parseTestResultArguments()
+		err := orchestration.ExtractTestResults(*hostArgument, options, configurationService, directoryRepository, messageHub)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -43,7 +50,7 @@ func main() {
 	}
 }
 
-func parseArguments() *models.RepositoryProcessingOptions {
+func parseRepositoryArguments() *models.RepositoryProcessingOptions {
 	result := &models.RepositoryProcessingOptions{
 		IncludeDetails:      true,
 		IncludeOwners:       false,
@@ -80,6 +87,19 @@ func parseArguments() *models.RepositoryProcessingOptions {
 
 	if strings.TrimSpace(*orgsArgument) != "" {
 		result.Organizations = strings.Split(*orgsArgument, ",")
+	}
+
+	return result
+}
+
+func parseTestResultArguments() *models.TestResultProcessingOptions {
+	result := &models.TestResultProcessingOptions{
+		Since:    core.ParseDate(sinceArgument),
+		Projects: nil,
+	}
+
+	if strings.TrimSpace(*projectsArgument) != "" {
+		result.Projects = strings.Split(*projectsArgument, ",")
 	}
 
 	return result
