@@ -11,3 +11,8 @@ type RepositoryProcessingOptions struct {
 	Organizations       []string
 	Since               *time.Time
 }
+
+type TestResultProcessingOptions struct {
+	Since    *time.Time
+	Projects []string
+}
