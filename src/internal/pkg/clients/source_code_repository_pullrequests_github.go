@@ -41,7 +41,7 @@ func (c *GithubSourceCodeRepositoryClient) processPullRequestsForRepository(clie
 
 		}
 
-		if response.NextPage == 0 {
+		if response == nil || response.NextPage == 0 {
 			break
 		}
 
@@ -71,7 +71,7 @@ func (s *GithubSourceCodeRepositoryClient) getPullRequestReviews(client *github.
 			result = append(result, item)
 		}
 
-		if response.NextPage == 0 {
+		if response == nil || response.NextPage == 0 {
 			break
 		}
 
@@ -102,7 +102,7 @@ func (s *GithubSourceCodeRepositoryClient) getPullRequestFiles(client *github.Cl
 			result = append(result, item)
 		}
 
-		if response.NextPage == 0 {
+		if response == nil || response.NextPage == 0 {
 			break
 		}
 
