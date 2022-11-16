@@ -12,5 +12,6 @@ type Host struct {
 	Type               string
 	SubType            string
 	AuthenticationType string
+	ClientId           string
 	ClientSecretName   string
 }

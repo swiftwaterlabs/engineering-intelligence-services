@@ -3,6 +3,7 @@ package clients
 import (
 	"fmt"
 	"github.com/google/go-github/v48/github"
+	sonargo "github.com/magicsong/sonargo/sonar"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/core"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/models"
 )
@@ -142,4 +143,8 @@ func resolveWebhookConfigValue(hook *github.Hook, name string) string {
 	}
 
 	return fmt.Sprint(hook.Config[name])
+}
+
+func mapTestResult(component *sonargo.Component, data *sonargo.MeasuresSearchHistoryObject) []*models.TestResult {
+	return make([]*models.TestResult, 0)
 }

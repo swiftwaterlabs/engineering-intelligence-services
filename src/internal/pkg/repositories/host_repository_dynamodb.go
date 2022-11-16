@@ -69,12 +69,13 @@ func (r *DynamoDbDirectoryRepository) mapItemToHost(item map[string]*dynamodb.At
 		Type:               r.getStringValue(item["Type"]),
 		SubType:            r.getStringValue(item["SubType"]),
 		AuthenticationType: r.getStringValue(item["AuthenticationType"]),
+		ClientId:           r.getStringValue(item["ClientId"]),
 		ClientSecretName:   r.getStringValue(item["ClientSecretName"]),
 	}
 }
 
 func (r *DynamoDbDirectoryRepository) getStringValue(item *dynamodb.AttributeValue) string {
-	if item.S == nil {
+	if item == nil || item.S == nil {
 		return ""
 	}
 	return aws.StringValue(item.S)
