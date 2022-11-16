@@ -29,7 +29,7 @@ func (c *SonarqubeTestResultClient) ProcessTestResults(configurationService conf
 
 func (c *SonarqubeTestResultClient) getClient(configurationService configuration.ConfigurationService) (*sonargo.Client, error) {
 	clientSecret := configurationService.GetSecret(c.host.ClientSecretName)
-	client, err := sonargo.NewClient(c.host.BaseUrl, c.host.ClientId, clientSecret)
+	client, err := sonargo.NewClient(c.host.BaseUrl, "", clientSecret)
 
 	return client, err
 }

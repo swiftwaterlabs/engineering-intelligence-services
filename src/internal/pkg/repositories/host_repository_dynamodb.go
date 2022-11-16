@@ -69,7 +69,6 @@ func (r *DynamoDbDirectoryRepository) mapItemToHost(item map[string]*dynamodb.At
 		Type:               r.getStringValue(item["Type"]),
 		SubType:            r.getStringValue(item["SubType"]),
 		AuthenticationType: r.getStringValue(item["AuthenticationType"]),
-		ClientId:           r.getStringValue(item["ClientId"]),
 		ClientSecretName:   r.getStringValue(item["ClientSecretName"]),
 	}
 }
