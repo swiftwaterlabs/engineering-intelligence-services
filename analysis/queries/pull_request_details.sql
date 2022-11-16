@@ -1,0 +1,20 @@
+select pr.id as Id,
+pr.repository.organization.host as Host,
+pr.repository.organization.name as OrganizationName,
+pr.repository.name as RepositoryName,
+concat(r.organization.host,'.',r.organization.name,'.',r.name) as RepositoryFullName,
+pr.title as Title,
+pr.status as Status,
+pr.createdAt as CreatedAt,
+pr.closedAt as ClosedAt,
+pr.ismerged as IsMerged,
+pr.targetBranch as TargetBranch,
+r.defaultbranch as RepositoryDefaultBranch,
+case when pr.targetbranch = r.defaultbranch then true else false end TargetedAtDefaultBranch,
+cardinality(pr.files) as FileCount,
+pr.createdBy as Author,
+case when pr.createdby like 'svc-%' or pr.createdby like 'tok-%' or pr.createdby like '%[bot]%' then 'Non Human Account' else 'Person' end AuthorUserType,
+cardinality(pr.reviews) as ReviewCount,
+pr.url as Url
+from engineering_intelligence_prd.pull_request pr
+left join engineering_intelligence_prd.repository r on pr.repository.id = r.id
