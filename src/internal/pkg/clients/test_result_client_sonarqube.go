@@ -22,7 +22,7 @@ func (c *SonarqubeTestResultClient) ProcessTestResults(configurationService conf
 		return err
 	}
 
-	err = c.processProjects(client, options, handler)
+	err = c.processComponents(client, options, handler)
 
 	return err
 }
@@ -76,6 +76,48 @@ func (c *SonarqubeTestResultClient) processProjects(client *sonargo.Client,
 	return core.ConsolidateErrors(processingErrors)
 }
 
+func (c *SonarqubeTestResultClient) processComponents(client *sonargo.Client,
+	options *models.TestResultProcessingOptions,
+	handler func(data []*models.TestResult)) error {
+
+	searchOptions := &sonargo.ComponentsSearchOption{
+		Q:          strings.Join(options.Projects, ","),
+		Ps:         "100",
+		Qualifiers: sonargo.QualifierProject,
+	}
+
+	processingErrors := make([]error, 0)
+
+	currentPage := 1
+	for {
+		projects, _, err := client.Components.Search(searchOptions)
+		if err != nil {
+			processingErrors = append(processingErrors, err)
+		}
+		if projects == nil {
+			break
+		}
+
+		for _, item := range projects.Components {
+			err = c.processComponent(client, item, options, handler)
+			if err != nil {
+				processingErrors = append(processingErrors, err)
+			}
+		}
+
+		if currentPage >= projects.Paging.Total {
+			break
+		}
+		currentPage++
+		searchOptions.P = fmt.Sprint(currentPage)
+	}
+
+	if len(processingErrors) == 0 {
+		return nil
+	}
+	return core.ConsolidateErrors(processingErrors)
+}
+
 func (c *SonarqubeTestResultClient) processComponent(client *sonargo.Client,
 	component *sonargo.Component,
 	options *models.TestResultProcessingOptions,
@@ -84,13 +126,13 @@ func (c *SonarqubeTestResultClient) processComponent(client *sonargo.Client,
 	searchOptions := &sonargo.MeasuresSearchHistoryOption{
 		Component: component.Key,
 		From:      "",
-		Metrics:   "overage,new_coverage,new_uncovered_lines",
+		Metrics:   "coverage,new_coverage,new_uncovered_lines,lines_to_cover,uncovered_lines",
 		P:         "",
 		Ps:        "100",
 	}
 
 	if options.Since != nil {
-		searchOptions.From = options.Since.Format("2006-02-01T15:04:05")
+		searchOptions.From = options.Since.Format("2006-01-02")
 	}
 
 	processingErrors := make([]error, 0)
@@ -103,6 +145,10 @@ func (c *SonarqubeTestResultClient) processComponent(client *sonargo.Client,
 		}
 
 		measuresByDate := make(map[string]map[string]string, 0)
+		if measuresData == nil {
+			break
+		}
+
 		for _, measure := range measuresData.Measures {
 			for _, history := range measure.Histories {
 				if measuresByDate[history.Date] == nil {

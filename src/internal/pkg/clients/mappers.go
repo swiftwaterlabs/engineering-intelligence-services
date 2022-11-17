@@ -146,5 +146,40 @@ func resolveWebhookConfigValue(hook *github.Hook, name string) string {
 }
 
 func mapTestResult(component *sonargo.Component, data *sonargo.MeasuresSearchHistoryObject) []*models.TestResult {
-	return make([]*models.TestResult, 0)
+	metricsByDate := mapTestResultMeasuresByDay(data)
+
+	results := make([]*models.TestResult, 0)
+	for date, measures := range metricsByDate {
+		testResult := &models.TestResult{
+			Id:         core.MapUniqueIdentifier(component.Key, date),
+			Type:       "testresult",
+			Project:    component.Project,
+			AnalyzedAt: date,
+			Metrics:    measures,
+			RawData: map[string]interface{}{
+				"component": component,
+				"measures":  data,
+			},
+		}
+
+		results = append(results, testResult)
+	}
+
+	return results
+}
+
+func mapTestResultMeasuresByDay(data *sonargo.MeasuresSearchHistoryObject) map[string]map[string]string {
+	metricsByDate := make(map[string]map[string]string, 0)
+	for _, measure := range data.Measures {
+		for _, history := range measure.Histories {
+			if metricsByDate[history.Date] == nil {
+				metricsByDate[history.Date] = make(map[string]string, 0)
+			}
+
+			if history.Value != "" {
+				metricsByDate[history.Date][measure.Metric] = history.Value
+			}
+		}
+	}
+	return metricsByDate
 }
