@@ -2,7 +2,7 @@ package clients
 
 import (
 	"fmt"
-	sonargo "github.com/magicsong/sonargo/sonar"
+	"github.com/swiftwaterlabs/engineering-intelligence-services/external/sonargo"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/configuration"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/core"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/models"
@@ -29,7 +29,7 @@ func (c *SonarqubeTestResultClient) ProcessTestResults(configurationService conf
 
 func (c *SonarqubeTestResultClient) getClient(configurationService configuration.ConfigurationService) (*sonargo.Client, error) {
 	clientSecret := configurationService.GetSecret(c.host.ClientSecretName)
-	client, err := sonargo.NewClient(c.host.BaseUrl, "", clientSecret)
+	client, err := sonargo.NewClientByToken(c.host.BaseUrl, clientSecret)
 
 	return client, err
 }
@@ -51,6 +51,9 @@ func (c *SonarqubeTestResultClient) processProjects(client *sonargo.Client,
 		projects, _, err := client.Projects.Search(searchOptions)
 		if err != nil {
 			processingErrors = append(processingErrors, err)
+		}
+		if projects == nil {
+			break
 		}
 
 		for _, item := range projects.Components {

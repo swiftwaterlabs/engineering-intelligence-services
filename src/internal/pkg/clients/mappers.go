@@ -3,7 +3,7 @@ package clients
 import (
 	"fmt"
 	"github.com/google/go-github/v48/github"
-	sonargo "github.com/magicsong/sonargo/sonar"
+	"github.com/swiftwaterlabs/engineering-intelligence-services/external/sonargo"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/core"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/models"
 )
