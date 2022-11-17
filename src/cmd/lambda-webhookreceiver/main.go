@@ -29,7 +29,6 @@ func main() {
 }
 
 func handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-
 	err := orchestration.ProcessWebhookEvent(event.Headers, event.Body, configurationService, messageHub)
 	if err != nil {
 		log.Printf("error when processing webhoook|%s", err)
