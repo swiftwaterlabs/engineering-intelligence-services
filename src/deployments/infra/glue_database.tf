@@ -437,6 +437,11 @@ resource "aws_glue_catalog_table" "webhook_event" {
     }
 
     columns {
+      name = "eventtype"
+      type = "string"
+    }
+
+    columns {
       name = "receivedat"
       type = "string"
     }
