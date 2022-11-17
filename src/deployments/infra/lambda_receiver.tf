@@ -1,7 +1,7 @@
 data "archive_file" "signal_persistance_lambda_zip" {
   type        = "zip"
   source_file = "../../cmd/lambda-engineeringobjectreceiver/main"
-  output_path = "main.zip"
+  output_path = "signalreceiver_main.zip"
 }
 
 resource "aws_lambda_function" "signal_persistance" {
