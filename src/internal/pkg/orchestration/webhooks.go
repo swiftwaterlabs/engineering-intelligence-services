@@ -10,8 +10,8 @@ import (
 )
 
 func ProcessWebhookEvent(headers map[string]string, event string, configurationService configuration.ConfigurationService, dataHub messaging.MessageHub) error {
-	webhookEvent := make(map[string]interface{}, 0)
-	core.MapFromJson(event, webhookEvent)
+	var webhookEvent interface{}
+	core.MapFromJson(event, &webhookEvent)
 	eventData := &models.WebhookEvent{
 		Id:         getWebhookUniqueIdentifier(headers),
 		Type:       "webhook-event",
