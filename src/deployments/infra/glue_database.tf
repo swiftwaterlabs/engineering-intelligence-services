@@ -379,6 +379,16 @@ resource "aws_glue_catalog_table" "test_result" {
     }
 
     columns {
+      name = "host"
+      type = "string"
+    }
+
+    columns {
+      name = "hosttype"
+      type = "string"
+    }
+
+    columns {
       name = "analyzedat"
       type = "string"
     }

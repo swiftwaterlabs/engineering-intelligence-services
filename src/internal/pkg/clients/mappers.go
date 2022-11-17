@@ -153,8 +153,10 @@ func mapTestResult(host *models.Host, component *sonargo.Component, data *sonarg
 		testResult := &models.TestResult{
 			Id:         core.MapUniqueIdentifier(host.BaseUrl, component.Key, date),
 			Type:       "testresult",
-			Project:    component.Project,
-			AnalyzedAt: date,
+			Project:    core.SanitizeString(component.Project),
+			Host:       core.SanitizeString(host.Id),
+			HostType:   core.SanitizeString(host.SubType),
+			AnalyzedAt: core.SanitizeString(date),
 			Metrics:    measures,
 			RawData: map[string]interface{}{
 				"component": component,
