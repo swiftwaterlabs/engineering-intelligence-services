@@ -10,20 +10,19 @@ import (
 )
 
 func ProcessWebhookEvent(headers map[string]string, event string, configurationService configuration.ConfigurationService, dataHub messaging.MessageHub) error {
+	webhookEvent := make(map[string]interface{}, 0)
+	core.MapFromJson(event, webhookEvent)
 	eventData := &models.WebhookEvent{
 		Id:         getWebhookUniqueIdentifier(headers),
 		Type:       "webhook-event",
 		Source:     getWebhookSource(headers),
 		ReceivedAt: time.Now(),
 		Headers:    headers,
-		RawData:    event,
+		RawData:    webhookEvent,
 	}
 
 	publishingQueue := configurationService.GetValue("engineering_intelligence_prd_ingestion_queue")
-	toPublish := []*models.WebhookEvent{
-		eventData,
-	}
-	err := dataHub.SendBulk(core.ToInterfaceSlice(toPublish), publishingQueue)
+	err := dataHub.Send(eventData, publishingQueue)
 
 	return err
 }
