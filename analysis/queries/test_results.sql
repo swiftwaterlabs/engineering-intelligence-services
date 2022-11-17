@@ -1,4 +1,6 @@
 select distinct tr.id as Id,
+                tr.host as Host,
+                tr.hosttype as HostType,
                 tr.project as Project,
                 element_at(split(tr.project,'.'),1) as Organization,
                 element_at(split(tr.project,'.'),2) as Repository,
