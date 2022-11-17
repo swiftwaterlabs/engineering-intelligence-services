@@ -1,7 +1,7 @@
 data "archive_file" "webhookreceiver_lambda_zip" {
   type        = "zip"
   source_file = "../../cmd/lambda-webhookreceiver/main"
-  output_path = "main.zip"
+  output_path = "webhookreceiver_main.zip"
 }
 
 resource "aws_lambda_function" "webhook_receiver" {
