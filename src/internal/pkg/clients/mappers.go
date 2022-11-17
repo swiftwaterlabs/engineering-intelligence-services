@@ -3,6 +3,7 @@ package clients
 import (
 	"fmt"
 	"github.com/google/go-github/v48/github"
+	"github.com/swiftwaterlabs/engineering-intelligence-services/external/sonargo"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/core"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/models"
 )
@@ -142,4 +143,45 @@ func resolveWebhookConfigValue(hook *github.Hook, name string) string {
 	}
 
 	return fmt.Sprint(hook.Config[name])
+}
+
+func mapTestResult(host *models.Host, component *sonargo.Component, data *sonargo.MeasuresSearchHistoryObject) []*models.TestResult {
+	metricsByDate := mapTestResultMeasuresByDay(data)
+
+	results := make([]*models.TestResult, 0)
+	for date, measures := range metricsByDate {
+		testResult := &models.TestResult{
+			Id:         core.MapUniqueIdentifier(host.BaseUrl, component.Key, date),
+			Type:       "testresult",
+			Project:    core.SanitizeString(component.Project),
+			Host:       core.SanitizeString(host.Id),
+			HostType:   core.SanitizeString(host.SubType),
+			AnalyzedAt: core.SanitizeString(date),
+			Metrics:    measures,
+			RawData: map[string]interface{}{
+				"component": component,
+				"measures":  data,
+			},
+		}
+
+		results = append(results, testResult)
+	}
+
+	return results
+}
+
+func mapTestResultMeasuresByDay(data *sonargo.MeasuresSearchHistoryObject) map[string]map[string]string {
+	metricsByDate := make(map[string]map[string]string, 0)
+	for _, measure := range data.Measures {
+		for _, history := range measure.Histories {
+			if metricsByDate[history.Date] == nil {
+				metricsByDate[history.Date] = make(map[string]string, 0)
+			}
+
+			if history.Value != "" {
+				metricsByDate[history.Date][measure.Metric] = history.Value
+			}
+		}
+	}
+	return metricsByDate
 }

@@ -14,7 +14,7 @@ type TestResultClient interface {
 }
 
 func NewTestResultClient(host *models.Host) (TestResultClient, error) {
-	if strings.Contains(strings.ToLower(host.SubType), "github") {
+	if strings.Contains(strings.ToLower(host.SubType), "sonarqube") {
 		return &SonarqubeTestResultClient{
 			host: host,
 		}, nil

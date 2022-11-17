@@ -76,7 +76,7 @@ func getTestResultHandler(host *models.Host,
 			log.Println(err)
 		}
 		counter += len(data)
-		log.Printf("Processed %v repositories from %s", counter, host.Name)
+		log.Printf("Processed %v project analyses from %s", counter, host.Name)
 	}
 	return handler
 }

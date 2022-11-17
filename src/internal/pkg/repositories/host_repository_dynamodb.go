@@ -74,7 +74,7 @@ func (r *DynamoDbDirectoryRepository) mapItemToHost(item map[string]*dynamodb.At
 }
 
 func (r *DynamoDbDirectoryRepository) getStringValue(item *dynamodb.AttributeValue) string {
-	if item.S == nil {
+	if item == nil || item.S == nil {
 		return ""
 	}
 	return aws.StringValue(item.S)
