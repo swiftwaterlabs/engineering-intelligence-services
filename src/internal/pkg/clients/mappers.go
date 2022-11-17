@@ -145,13 +145,13 @@ func resolveWebhookConfigValue(hook *github.Hook, name string) string {
 	return fmt.Sprint(hook.Config[name])
 }
 
-func mapTestResult(component *sonargo.Component, data *sonargo.MeasuresSearchHistoryObject) []*models.TestResult {
+func mapTestResult(host *models.Host, component *sonargo.Component, data *sonargo.MeasuresSearchHistoryObject) []*models.TestResult {
 	metricsByDate := mapTestResultMeasuresByDay(data)
 
 	results := make([]*models.TestResult, 0)
 	for date, measures := range metricsByDate {
 		testResult := &models.TestResult{
-			Id:         core.MapUniqueIdentifier(component.Key, date),
+			Id:         core.MapUniqueIdentifier(host.BaseUrl, component.Key, date),
 			Type:       "testresult",
 			Project:    component.Project,
 			AnalyzedAt: date,
