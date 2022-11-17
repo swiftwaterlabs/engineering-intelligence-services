@@ -402,8 +402,8 @@ resource "aws_glue_catalog_table" "test_result" {
   }
 }
 
-resource "aws_glue_catalog_table" "test_result" {
-  name          = "test_result"
+resource "aws_glue_catalog_table" "webhook_event" {
+  name          = "webhook_event"
   database_name = aws_glue_catalog_database.object_db.name
 
   table_type = "EXTERNAL_TABLE"
