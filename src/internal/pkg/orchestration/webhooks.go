@@ -28,32 +28,27 @@ func ProcessWebhookEvent(headers map[string]string,
 		}
 	}
 
-	var webhookEvent interface{}
-	core.MapFromJson(event, &webhookEvent)
+	eventData := mapToWebhookEvent(headers, event, eventSourceName)
 
-	eventData := &models.WebhookEvent{
-		Id:         getWebhookUniqueIdentifier(headers),
-		Type:       "webhook-event",
-		Source:     eventSourceName,
-		EventType:  getWebhookEventType(headers),
-		ReceivedAt: time.Now(),
-		Headers:    headers,
-		RawData:    webhookEvent,
+	signalPublishingQueue := configurationService.GetValue("engineering_intelligence_prd_ingestion_queue")
+	err := dataHub.Send(eventData, signalPublishingQueue)
+	if err != nil {
+		return true, err
 	}
 
-	publishingQueue := configurationService.GetValue("engineering_intelligence_prd_ingestion_queue")
-	err := dataHub.Send(eventData, publishingQueue)
+	webhookEventQueue := configurationService.GetValue("engineering_intelligence_prd_webhook_event_queue")
+	err = dataHub.Send(eventData, webhookEventQueue)
 
 	return true, err
 }
 
 func getWebhookSource(headers map[string]string) string {
 	if headers["X-GitHub-Event"] != "" {
-		return "github"
+		return models.WebhookEventSourceGithub
 	}
 
 	if headers["X-SonarQube-Project"] != "" {
-		return "sonarqube"
+		return models.WebhookEventSourceSonarqube
 	}
 
 	return ""
@@ -66,9 +61,9 @@ func authenticateEvent(headers map[string]string,
 	configurationService configuration.ConfigurationService) (bool, error) {
 
 	actualHash := ""
-	if sourceName == "github" {
+	if sourceName == models.WebhookEventSourceGithub {
 		actualHash = headers["X-Hub-Signature-256"]
-	} else if sourceName == "sonarqube" {
+	} else if sourceName == models.WebhookEventSourceSonarqube {
 		actualHash = headers["X-Sonar-Webhook-HMAC-SHA256"]
 	} else {
 		return false, errors.New("unrecognized source")
@@ -97,6 +92,22 @@ func authenticateEvent(headers map[string]string,
 	}
 
 	return false, nil
+}
+
+func mapToWebhookEvent(headers map[string]string, event string, eventSourceName string) *models.WebhookEvent {
+	var webhookEvent interface{}
+	core.MapFromJson(event, &webhookEvent)
+
+	eventData := &models.WebhookEvent{
+		Id:         getWebhookUniqueIdentifier(headers),
+		Type:       "webhook-event",
+		Source:     eventSourceName,
+		EventType:  getWebhookEventType(headers),
+		ReceivedAt: time.Now(),
+		Headers:    headers,
+		RawData:    webhookEvent,
+	}
+	return eventData
 }
 
 func getWebhookUniqueIdentifier(headers map[string]string) string {
