@@ -7,6 +7,15 @@ resource "aws_secretsmanager_secret_version" "hosts_table" {
   secret_string = aws_dynamodb_table.hosts.name
 }
 
+resource "aws_secretsmanager_secret" "event_sources_table" {
+  name = "${local.service_name}_event_sources_table"
+}
+
+resource "aws_secretsmanager_secret_version" "event_sources_table" {
+  secret_id     = aws_secretsmanager_secret.event_sources_table.id
+  secret_string = aws_dynamodb_table.event_sources.name
+}
+
 resource "aws_secretsmanager_secret" "ingestion_queue" {
   name = "${local.service_name}_ingestion_queue"
 }
