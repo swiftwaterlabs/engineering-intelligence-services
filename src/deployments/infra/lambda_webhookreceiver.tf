@@ -17,7 +17,7 @@ resource "aws_lambda_function" "webhook_receiver" {
   environment {
     variables = {
       aws_region = var.aws_region
-      authenticate_events = "true"
+      authenticate_events = "false"
     }
   }
   
