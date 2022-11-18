@@ -59,6 +59,37 @@ func (hub *SqsMessageHub) SendBulk(toSend []interface{}, target string) error {
 	return nil
 }
 
+func (hub *SqsMessageHub) Receive(target string, handler func(message interface{})) error {
+	urlResult, queueUrlErr := hub.sqs.GetQueueUrl(&sqs.GetQueueUrlInput{QueueName: aws.String(target)})
+	if queueUrlErr != nil {
+		return queueUrlErr
+	}
+
+	options := &sqs.ReceiveMessageInput{
+		QueueUrl: urlResult.QueueUrl,
+	}
+
+	for {
+		result, err := hub.sqs.ReceiveMessage(options)
+		if err != nil {
+			break
+		}
+
+		for _, item := range result.Messages {
+			var data interface{}
+			core.MapFromJson(aws.StringValue(item.Body), &data)
+			handler(data)
+
+			deleteOptions := &sqs.DeleteMessageInput{
+				QueueUrl:      urlResult.QueueUrl,
+				ReceiptHandle: item.ReceiptHandle,
+			}
+			hub.sqs.DeleteMessage(deleteOptions)
+		}
+	}
+
+	return nil
+}
 func (hub *SqsMessageHub) mapToSqsSendMessage(sqsInstance *sqs.SQS, toMap interface{}, queueName string) (*sqs.SendMessageInput, error) {
 	urlResult, queueUrlErr := sqsInstance.GetQueueUrl(&sqs.GetQueueUrlInput{QueueName: aws.String(queueName)})
 	if queueUrlErr != nil {

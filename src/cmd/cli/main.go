@@ -45,6 +45,13 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+	case "webhook":
+		{
+			err := orchestration.ListenForWebhookEvents(configurationService, directoryRepository, messageHub)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
 	default:
 		log.Fatalln("Unrecognized object")
 	}

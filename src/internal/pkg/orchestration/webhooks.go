@@ -44,11 +44,11 @@ func ProcessWebhookEvent(headers map[string]string,
 
 func getWebhookSource(headers map[string]string) string {
 	if headers["X-GitHub-Event"] != "" {
-		return "github"
+		return models.WebhookEventSourceGithub
 	}
 
 	if headers["X-SonarQube-Project"] != "" {
-		return "sonarqube"
+		return models.WebhookEventSourceSonarqube
 	}
 
 	return ""
@@ -61,9 +61,9 @@ func authenticateEvent(headers map[string]string,
 	configurationService configuration.ConfigurationService) (bool, error) {
 
 	actualHash := ""
-	if sourceName == "github" {
+	if sourceName == models.WebhookEventSourceGithub {
 		actualHash = headers["X-Hub-Signature-256"]
-	} else if sourceName == "sonarqube" {
+	} else if sourceName == models.WebhookEventSourceSonarqube {
 		actualHash = headers["X-Sonar-Webhook-HMAC-SHA256"]
 	} else {
 		return false, errors.New("unrecognized source")

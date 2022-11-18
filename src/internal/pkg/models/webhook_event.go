@@ -2,6 +2,9 @@ package models
 
 import "time"
 
+const WebhookEventSourceGithub = "github"
+const WebhookEventSourceSonarqube = "sonarqube"
+
 type WebhookEvent struct {
 	Id         string
 	Type       string
