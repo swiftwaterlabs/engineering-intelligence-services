@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/configuration"
 	"github.com/swiftwaterlabs/engineering-intelligence-services/internal/pkg/models"
+	"log"
 	"strings"
 )
 
@@ -70,6 +71,7 @@ func (r *DynamoDbDirectoryRepository) mapItemToHost(item map[string]*dynamodb.At
 		SubType:            r.getStringValue(item["SubType"]),
 		AuthenticationType: r.getStringValue(item["AuthenticationType"]),
 		ClientSecretName:   r.getStringValue(item["ClientSecretName"]),
+		Options:            r.getMapValue(item["Options"]),
 	}
 }
 
@@ -78,4 +80,18 @@ func (r *DynamoDbDirectoryRepository) getStringValue(item *dynamodb.AttributeVal
 		return ""
 	}
 	return aws.StringValue(item.S)
+}
+
+func (r *DynamoDbDirectoryRepository) getMapValue(item *dynamodb.AttributeValue) map[string]string {
+	if item == nil || item.M == nil {
+		return make(map[string]string, 0)
+	}
+
+	result := make(map[string]string, 0)
+
+	for key, value := range item.M {
+		result[key] = aws.StringValue(value.S)
+	}
+	log.Println(result)
+	return result
 }
