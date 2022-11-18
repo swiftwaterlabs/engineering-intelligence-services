@@ -28,21 +28,16 @@ func ProcessWebhookEvent(headers map[string]string,
 		}
 	}
 
-	var webhookEvent interface{}
-	core.MapFromJson(event, &webhookEvent)
+	eventData := mapToWebhookEvent(headers, event, eventSourceName)
 
-	eventData := &models.WebhookEvent{
-		Id:         getWebhookUniqueIdentifier(headers),
-		Type:       "webhook-event",
-		Source:     eventSourceName,
-		EventType:  getWebhookEventType(headers),
-		ReceivedAt: time.Now(),
-		Headers:    headers,
-		RawData:    webhookEvent,
+	signalPublishingQueue := configurationService.GetValue("engineering_intelligence_prd_ingestion_queue")
+	err := dataHub.Send(eventData, signalPublishingQueue)
+	if err != nil {
+		return true, err
 	}
 
-	publishingQueue := configurationService.GetValue("engineering_intelligence_prd_ingestion_queue")
-	err := dataHub.Send(eventData, publishingQueue)
+	webhookEventQueue := configurationService.GetValue("engineering_intelligence_prd_webhook_event_queue")
+	err = dataHub.Send(eventData, webhookEventQueue)
 
 	return true, err
 }
@@ -97,6 +92,22 @@ func authenticateEvent(headers map[string]string,
 	}
 
 	return false, nil
+}
+
+func mapToWebhookEvent(headers map[string]string, event string, eventSourceName string) *models.WebhookEvent {
+	var webhookEvent interface{}
+	core.MapFromJson(event, &webhookEvent)
+
+	eventData := &models.WebhookEvent{
+		Id:         getWebhookUniqueIdentifier(headers),
+		Type:       "webhook-event",
+		Source:     eventSourceName,
+		EventType:  getWebhookEventType(headers),
+		ReceivedAt: time.Now(),
+		Headers:    headers,
+		RawData:    webhookEvent,
+	}
+	return eventData
 }
 
 func getWebhookUniqueIdentifier(headers map[string]string) string {

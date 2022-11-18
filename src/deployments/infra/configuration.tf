@@ -25,6 +25,15 @@ resource "aws_secretsmanager_secret_version" "ingestion_queue" {
   secret_string = aws_sqs_queue.signal_ingestion.name
 }
 
+resource "aws_secretsmanager_secret" "webhook_event_queue" {
+  name = "${local.service_name}_webhook_event_queue"
+}
+
+resource "aws_secretsmanager_secret_version" "webhook_event_queue" {
+  secret_id     = aws_secretsmanager_secret.webhook_event_queue.id
+  secret_string = aws_sqs_queue.webhook_event.name
+}
+
 resource "aws_secretsmanager_secret" "blob_store" {
   name = "${local.service_name}_blob_store"
 }
