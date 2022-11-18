@@ -87,6 +87,7 @@ func authenticateEvent(headers map[string]string,
 				secretValue := configurationService.GetSecret(secret.SecretName)
 				secretValueAsBytes := []byte(secretValue)
 
+				// Use the go-github implementation since they've already done the hard work
 				err := github.ValidateSignature(actualHash, bodyAsBytes, secretValueAsBytes)
 				if err == nil {
 					return true, nil
