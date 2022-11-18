@@ -64,25 +64,25 @@ func (r *DynamoDbDirectoryRepository) Get(identifier string) (*models.Host, erro
 
 func (r *DynamoDbDirectoryRepository) mapItemToHost(item map[string]*dynamodb.AttributeValue) *models.Host {
 	return &models.Host{
-		Id:                 r.getStringValue(item["Id"]),
-		Name:               r.getStringValue(item["Name"]),
-		BaseUrl:            r.getStringValue(item["BaseUrl"]),
-		Type:               r.getStringValue(item["Type"]),
-		SubType:            r.getStringValue(item["SubType"]),
-		AuthenticationType: r.getStringValue(item["AuthenticationType"]),
-		ClientSecretName:   r.getStringValue(item["ClientSecretName"]),
-		Options:            r.getMapValue(item["Options"]),
+		Id:                 getStringValue(item["Id"]),
+		Name:               getStringValue(item["Name"]),
+		BaseUrl:            getStringValue(item["BaseUrl"]),
+		Type:               getStringValue(item["Type"]),
+		SubType:            getStringValue(item["SubType"]),
+		AuthenticationType: getStringValue(item["AuthenticationType"]),
+		ClientSecretName:   getStringValue(item["ClientSecretName"]),
+		Options:            getMapValue(item["Options"]),
 	}
 }
 
-func (r *DynamoDbDirectoryRepository) getStringValue(item *dynamodb.AttributeValue) string {
+func getStringValue(item *dynamodb.AttributeValue) string {
 	if item == nil || item.S == nil {
 		return ""
 	}
 	return aws.StringValue(item.S)
 }
 
-func (r *DynamoDbDirectoryRepository) getMapValue(item *dynamodb.AttributeValue) map[string]string {
+func getMapValue(item *dynamodb.AttributeValue) map[string]string {
 	if item == nil || item.M == nil {
 		return make(map[string]string, 0)
 	}
@@ -94,4 +94,11 @@ func (r *DynamoDbDirectoryRepository) getMapValue(item *dynamodb.AttributeValue)
 	}
 	log.Println(result)
 	return result
+}
+
+func getBooleanValue(item *dynamodb.AttributeValue) bool {
+	if item == nil || item.BOOL == nil {
+		return false
+	}
+	return aws.BoolValue(item.BOOL)
 }

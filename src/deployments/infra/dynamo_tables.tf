@@ -9,3 +9,15 @@ resource "aws_dynamodb_table" "hosts" {
   }
 
 }
+
+resource "aws_dynamodb_table" "event_sources" {
+  name           = "${local.service_name}_event_sources"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "Id"
+
+  attribute {
+    name = "Id"
+    type = "S"
+  }
+
+}
