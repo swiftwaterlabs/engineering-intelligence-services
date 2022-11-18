@@ -13,4 +13,5 @@ type Host struct {
 	SubType            string
 	AuthenticationType string
 	ClientSecretName   string
+	Options            map[string]string
 }

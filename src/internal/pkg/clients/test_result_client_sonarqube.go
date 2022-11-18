@@ -23,8 +23,11 @@ func (c *SonarqubeTestResultClient) ProcessTestResults(configurationService conf
 		return err
 	}
 
-	// Note: processProjects is preferred, but requires admin rights.
-	err = c.processComponents(client, options, handler)
+	if strings.EqualFold(c.host.Options["ProjectSearchMethod"], "component") {
+		err = c.processComponents(client, options, handler)
+	} else {
+		err = c.processProjects(client, options, handler)
+	}
 
 	return err
 }
