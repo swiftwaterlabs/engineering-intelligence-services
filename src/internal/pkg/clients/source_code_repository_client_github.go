@@ -185,6 +185,8 @@ func (c *GithubSourceCodeRepositoryClient) processRepositoriesInOrganization(cli
 		ListOptions: github.ListOptions{PerPage: 100},
 	}
 
+	ownerResolver := NewSourceCodeRepositoryOwnerResolver(c.host)
+
 	for {
 		repositories, response, err := client.Repositories.ListByOrg(context.Background(), organization.GetLogin(), opt)
 		if err != nil {
@@ -201,7 +203,7 @@ func (c *GithubSourceCodeRepositoryClient) processRepositoriesInOrganization(cli
 
 			if options.IncludeOwners {
 				log.Printf("Resolving Owners for %s", item.GetURL())
-				ownerData := c.resolveRepositoryOwners(mappedItem, codeOwners)
+				ownerData := ownerResolver.ResolveRepositoryOwners(mappedItem, codeOwners)
 				repositoryOwners = append(repositoryOwners, ownerData...)
 			}
 
