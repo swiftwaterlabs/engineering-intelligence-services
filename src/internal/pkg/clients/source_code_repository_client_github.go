@@ -201,7 +201,7 @@ func (c *GithubSourceCodeRepositoryClient) processRepositoriesInOrganization(cli
 
 			if options.IncludeOwners {
 				log.Printf("Resolving Owners for %s", item.GetURL())
-				ownerData := c.resolveRepositoryOwners(client, mappedItem, codeOwners)
+				ownerData := c.resolveRepositoryOwners(mappedItem, codeOwners)
 				repositoryOwners = append(repositoryOwners, ownerData...)
 			}
 

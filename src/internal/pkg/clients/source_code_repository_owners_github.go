@@ -78,7 +78,7 @@ func (s *GithubSourceCodeRepositoryClient) getCodeOwnersContent(client *github.C
 	}
 }
 
-func (c *GithubSourceCodeRepositoryClient) resolveRepositoryOwners(client *github.Client, repository *models.Repository,
+func (c *GithubSourceCodeRepositoryClient) resolveRepositoryOwners(repository *models.Repository,
 	codeOwners map[string]map[string]*codeOwnerData) []*models.RepositoryOwner {
 
 	repositoryCodeOwner := c.coalesceCodeOwners(codeOwners[repository.Name]["CODEOWNERS"],
